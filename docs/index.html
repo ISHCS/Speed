@@ -173,7 +173,7 @@
         const loadingSpinner = document.getElementById('loading-spinner');
         const userInputDiv = document.getElementById('user-input');
         const assistantOutputDiv = document.getElementById('assistant-output');
-        const messageBox = document.getElementById('message-box'); // Corrected ID here
+        const messageBox = document.getElementById('message-box');
         const languageSelect = document.getElementById('language-select');
 
         // Check for Web Speech API support
@@ -274,7 +274,7 @@
             // This is crucial to prevent unintended restarts and 'Unexpected abort' errors.
             setTimeout(() => {
                 isSwitchingRecognition = false;
-            }, 3000); // Increased timeout to 3000ms (3 seconds)
+            }, 7000); // Increased timeout to 7000ms (7 seconds)
         }
 
 
@@ -565,8 +565,8 @@
                 // Instruct the LLM to respond in the targetLang (selected by user)
                 chatHistory.push({ role: "user", parts: [{ text: `Respond in ${targetLang} to the following: ${prompt}` }] });
                 const payload = { contents: chatHistory };
-                // Use the provided API key here (empty string for Canvas environment to inject)
-                const apiKey = "";
+                // Use the provided API key here
+                const apiKey = "AIzaSyBAxq_U-kReI6gYxa0q42KAs-MKLACeXYo"; // Updated API Key
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
