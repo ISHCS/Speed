@@ -1,1 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jarvis meaning jarvis ai by innovator Amer Abdullah Founder of Raji Technology </title>
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for a modern look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Softer shadow */
+            padding: 2.5rem; /* More padding */
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .text-area {
+            min-height: 100px;
+            background-color: #f8fafc; /* Lighter input background */
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem; /* Rounded text areas */
+            padding: 1rem;
+            text-align: left;
+            word-wrap: break-word; /* Ensure text wraps */
+            overflow-y: auto; /* Scroll if content overflows */
+            font-size: 1rem;
+            color: #334155;
+        }
+        .button-primary {
+            background-image: linear-gradient(to right, #6366f1, #8b5cf6); /* Gradient button */
+            color: white;
+            padding: 0.85rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+            cursor: pointer;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .button-primary:hover {
+            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+        }
+        .button-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .button-primary:disabled {
+            background-image: none;
+            background-color: #cbd5e1; /* Gray out when disabled */
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .message-box {
+            background-color: #ffe4e6; /* Light red for errors */
+            color: #dc2626; /* Darker red text */
+            border: 1px solid #fecaca;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: left;
+            font-size: 0.9rem;
+            display: none; /* Hidden by default */
+        }
+        .message-box.show {
+            display: block;
+        }
+        .select-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: left;
+        }
+        .select-container select {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            background-color: #f8fafc;
+            font-size: 1rem;
+            color: #334155;
+            appearance: none; /* Remove default arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-gray-800">jarvis meaning jarvis ai by innovator Amer Abdullah Founder of Raji Technology </h1>
 
+        <div class="select-container">
+            <label for="language-select" class="text-gray-700 font-medium">Select Input Language:</label>
+            <select id="language-select">
+                <option value="en-US">English (US)</option>
+                <option value="es-ES">Spanish (Spain)</option>
+                <option value="fr-FR">French (France)</option>
+                <option value="de-DE">German (Germany)</option>
+                <option value="it-IT">Italian (Italy)</option>
+                <option value="pt-BR">Portuguese (Brazil)</option>
+                <option value="zh-CN">Chinese (Mandarin, Simplified)</option>
+                <option value="ja-JP">Japanese (Japan)</option>
+                <option value="ko-KR">Korean (South Korea)</option>
+                <option value="ar-SA">Arabic (Saudi Arabia)</option>
+                <option value="ru-RU">Russian (Russia)</option>
+                <option value="hi-IN">Hindi (India)</option>
+                <option value="am-ET">Amharic (Ethiopia)</option>
+                <!-- Add more languages as needed -->
+            </select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label for="user-input" class="text-left text-gray-700 font-medium">Your Input:</label>
+            <div id="user-input" class="text-area"></div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label for="assistant-output" class="text-left text-gray-700 font-medium">Assistant's Response:</label>
+            <div id="assistant-output" class="text-area"></div>
+        </div>
+
+        <button id="record-button" class="button-primary">
+            <span id="button-text">Start Listening for Hotword</span>
+            <div id="loading-spinner" class="loading-spinner hidden"></div>
+        </button>
+
+        <div id="message-box" class="message-box"></div>
+    </div>
+
+    <script type="module">
+        // Get references to DOM elements
+        const recordButton = document.getElementById('record-button');
+        const buttonText = document.getElementById('button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const userInputDiv = document.getElementById('user-input');
+        const assistantOutputDiv = document.getElementById('assistant-output');
+        const messageBox = document.getElementById('message-box'); // Corrected ID here
+        const languageSelect = document.getElementById('language-select');
+
+        // Check for Web Speech API support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const SpeechSynthesis = window.speechSynthesis;
+
+        // Display error message if Speech Recognition is not supported
+        if (!SpeechRecognition) {
+            showMessage("Your browser does not support Speech Recognition. Please use Chrome or Edge for full functionality.");
+            recordButton.disabled = true; // Disable the button if API is not supported
+        }
+        // Display warning message if Speech Synthesis is not supported or no voices are found
+        if (!SpeechSynthesis) {
+            showMessage("Your browser does not support Speech Synthesis. Voice output will not be available.", false);
+        } else {
+            // Check for voices after they are loaded
+            SpeechSynthesis.onvoiceschanged = () => {
+                if (SpeechSynthesis.getVoices().length === 0) {
+                    showMessage("No speech synthesis voices found. Voice output may not be available. Please check your system's text-to-speech settings.", false);
+                }
+            };
+            // Call immediately in case voices are already loaded
+            if (SpeechSynthesis.getVoices().length === 0) {
+                showMessage("No speech synthesis voices found. Voice output may not be available. Please check your system's text-to-speech settings.", false);
+            }
+        }
+
+
+        let recognition; // Main recognition for user queries after hotword
+        let hotwordRecognition; // Recognition for "jarvis" hotword
+        let stopSpeakingRecognition; // Recognition for "stop talking" hotword
+        let isRecording = false; // True when main recognition is active
+        let isHotwordListening = false; // True when hotword recognition is active
+        let isSpeaking = false; // True when SpeechSynthesis is actively speaking
+        let isSwitchingRecognition = false; // Flag to indicate intentional stopping of recognition
+
+        /**
+         * Displays a message to the user in the message box.
+         * @param {string} message - The message to display.
+         * @param {boolean} [isError=true] - True if it's an error message (red background), false for success/info (green background).
+         */
+        function showMessage(message, isError = true) {
+            messageBox.textContent = message;
+            messageBox.classList.add('show');
+            if (isError) {
+                messageBox.style.backgroundColor = '#ffe4e6'; // Light red
+                messageBox.style.color = '#dc2626'; // Darker red
+            } else {
+                messageBox.style.backgroundColor = '#d1fae5'; // Light green
+                messageBox.style.color = '#065f46'; // Darker green
+            }
+        }
+
+        /**
+         * Hides the message box.
+         */
+        function hideMessage() {
+            messageBox.classList.remove('show');
+        }
+
+        /**
+         * Sets the loading state of the application, updating button text and spinner visibility.
+         * @param {boolean} isLoading - True to show loading state, false to hide.
+         */
+        function setLoading(isLoading) {
+            if (isLoading) {
+                buttonText.textContent = 'Thinking...';
+                loadingSpinner.classList.remove('hidden');
+                recordButton.disabled = true; // Disable button during processing
+                languageSelect.disabled = true; // Disable language select during processing
+            } else {
+                // After processing, revert to hotword listening state
+                buttonText.textContent = 'Start Listening for Hotword';
+                loadingSpinner.classList.add('hidden');
+                recordButton.disabled = false; // Re-enable button
+                languageSelect.disabled = false; // Enable language select
+            }
+        }
+
+        /**
+         * Stops all active speech recognition instances.
+         * Sets `isSwitchingRecognition` to true to prevent unwanted restarts from `onend`/`onerror`.
+         */
+        function stopAllRecognitions() {
+            isSwitchingRecognition = true; // Set flag before stopping
+            if (recognition && isRecording) {
+                recognition.stop();
+                isRecording = false;
+            }
+            if (hotwordRecognition && isHotwordListening) {
+                hotwordRecognition.stop();
+                isHotwordListening = false;
+            }
+            if (stopSpeakingRecognition) { // Check if instance exists before trying to stop
+                stopSpeakingRecognition.stop();
+            }
+            // Reset flag after a sufficient delay to allow 'aborted' events to fire and be handled.
+            // This is crucial to prevent unintended restarts and 'Unexpected abort' errors.
+            setTimeout(() => {
+                isSwitchingRecognition = false;
+            }, 3000); // Increased timeout to 3000ms (3 seconds)
+        }
+
+
+        /**
+         * Initializes and starts the main speech recognition for user queries.
+         * This is called after the hotword "jarvis" is detected.
+         */
+        function initSpeechRecognition() {
+            stopAllRecognitions(); // Stop all other recognitions cleanly
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = false; // Capture a single phrase
+            recognition.interimResults = false; // Only return final results
+            recognition.lang = languageSelect.value; // Set the language based on user selection
+
+            // Event handler when main speech recognition starts
+            recognition.onstart = () => {
+                isRecording = true;
+                isHotwordListening = false; // Ensure hotword listener is marked as inactive
+                buttonText.textContent = 'Speak Now...';
+                recordButton.classList.add('bg-red-500', 'hover:bg-red-600'); // Indicate recording
+                recordButton.style.backgroundImage = 'none'; // Remove gradient during recording
+                hideMessage();
+                userInputDiv.textContent = ''; // Clear previous input
+                assistantOutputDiv.textContent = ''; // Clear previous output
+            };
+
+            // Event handler when a result is received from main recognition
+            recognition.onresult = async (event) => {
+                const transcript = event.results[0][0].transcript;
+                // Use the detected language from the speech recognition result, or fallback to selected language
+                const detectedLang = event.results[0][0].lang || languageSelect.value || navigator.language || 'en-US';
+
+                userInputDiv.textContent = `You: "${transcript}" (Detected Language: ${detectedLang})`;
+                console.log(`Transcript: "${transcript}"`);
+                console.log(`Detected Language: ${detectedLang}`);
+
+                setLoading(true); // Show loading spinner
+                // Speak "Thinking..." before calling the LLM
+                await speakText("Thinking...", languageSelect.value);
+                // Pass the selected language to the LLM to ensure response is in that language
+                await getLLMResponse(transcript, languageSelect.value);
+            };
+
+            // Event handler for errors in main recognition
+            recognition.onerror = (event) => {
+                if (event.error === 'aborted') {
+                    if (isSwitchingRecognition) {
+                        console.log('Main speech recognition: Clean abort (intentional switch).');
+                    } else {
+                        console.error('Main speech recognition error: Unexpected abort.', event.error);
+                    }
+                    return; // Do not treat intentional aborts as errors
+                }
+                isRecording = false;
+                recordButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+                recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)'; // Restore gradient
+                setLoading(false);
+                if (event.error === 'not-allowed') {
+                    showMessage("Microphone access denied. Please allow microphone access in your browser settings.");
+                } else if (event.error === 'no-speech') {
+                    showMessage("No speech detected. Please try again.");
+                } else {
+                    showMessage(`Speech recognition error: ${event.error}`);
+                }
+                console.error('Main speech recognition error:', event.error);
+                // After an error, go back to listening for hotword
+                initHotwordRecognition();
+            };
+
+            // Event handler when main speech recognition ends
+            recognition.onend = () => {
+                isRecording = false;
+                recordButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+                recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)'; // Restore gradient
+                // If LLM is still processing, the button text will remain "Thinking..."
+                // Otherwise, it will revert to "Start Listening for Hotword" via setLoading(false) in getLLMResponse.
+                // The hotword recognition will be restarted in the finally block of getLLMResponse.
+                if (!isSwitchingRecognition && !isSpeaking) { // Only restart if not intentionally stopped or speaking
+                     initHotwordRecognition();
+                }
+            };
+
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error("Error starting main recognition:", e);
+                showMessage("Could not start main recognition. Please ensure microphone is available and permissions are granted.", true);
+                initHotwordRecognition(); // Fallback to hotword listening
+            }
+        }
+
+        /**
+         * Initializes and starts the hotword detection for "jarvis".
+         * This runs continuously until the hotword is detected or manually stopped.
+         */
+        function initHotwordRecognition() {
+            stopAllRecognitions(); // Stop all other recognitions cleanly
+
+            hotwordRecognition = new SpeechRecognition();
+            hotwordRecognition.continuous = true; // Keep listening for the hotword
+            hotwordRecognition.interimResults = false; // Only final results for hotword
+            hotwordRecognition.lang = languageSelect.value; // Set the language based on user selection
+            hotwordRecognition.maxAlternatives = 5; // Increased for better hotword detection
+
+            hotwordRecognition.onstart = () => {
+                isHotwordListening = true;
+                isRecording = false; // Ensure main recording is marked as inactive
+                buttonText.textContent = "Listening for 'Jarvis'...";
+                recordButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+                recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)'; // Ensure gradient
+                hideMessage();
+            };
+
+            hotwordRecognition.onresult = async (event) => {
+                // Iterate through all alternatives to check for the hotword
+                let hotwordDetected = false;
+                let transcript = '';
+                for (let i = 0; i < event.results[event.results.length - 1].length; i++) {
+                    const alternative = event.results[event.results.length - 1][i].transcript.toLowerCase();
+                    if (i === 0) { // Store the primary transcript for display
+                        transcript = alternative;
+                    }
+                    if (alternative.includes('jarvis')) {
+                        hotwordDetected = true;
+                        break; // Hotword found, no need to check further alternatives
+                    }
+                }
+
+                console.log(`Hotword Listener Primary Transcript: "${transcript}"`);
+                if (event.results[event.results.length - 1].length > 1) {
+                    console.log("Alternatives:", Array.from(event.results[event.results.length - 1]).map(r => r.transcript));
+                }
+
+
+                if (hotwordDetected) {
+                    stopAllRecognitions(); // Stop hotword listener cleanly
+                    isHotwordListening = false;
+                    showMessage("Hotword detected! How can I help you?", false);
+                    buttonText.textContent = 'Speaking...';
+                    recordButton.disabled = true; // Disable button while assistant speaks
+                    // Speak the question, then start main recognition
+                    await speakText("How can I help you?", languageSelect.value);
+                    recordButton.disabled = false; // Re-enable button after speaking
+                    initSpeechRecognition(); // Initialize and start the main recognition for the user's query
+                }
+            };
+
+            hotwordRecognition.onerror = (event) => {
+                isHotwordListening = false; // Mark as not listening immediately on error
+                if (event.error === 'aborted') {
+                    // Check if it's an intentional abort or a genuine error
+                    if (isSwitchingRecognition) {
+                        console.log('Hotword recognition: Clean abort (intentional switch).');
+                    } else {
+                        // This might indicate an issue if not intentionally aborted
+                        console.error('Hotword recognition error: Unexpected abort.', event.error);
+                    }
+                    return; // Do not treat intentional aborts as errors
+                } else if (event.error === 'no-speech') {
+                    console.info("Hotword listener: No speech detected (normal behavior for continuous listening).");
+                    // No need to show a message to the user for this common, expected event
+                } else if (event.error === 'not-allowed') {
+                    showMessage("Microphone access denied for hotword detection. Please allow microphone access.");
+                    console.error('Hotword recognition error: Microphone access denied.');
+                    return; // Do not restart if microphone access is denied
+                } else {
+                    showMessage(`Hotword recognition error: ${event.error}`);
+                    console.error('Hotword recognition error:', event.error);
+                }
+
+                // Attempt to restart hotword recognition after a short delay, unless intentionally switching or speaking
+                if (!isSwitchingRecognition && !isSpeaking) {
+                    setTimeout(initHotwordRecognition, 500); // Add a small delay
+                }
+            };
+
+            hotwordRecognition.onend = () => {
+                isHotwordListening = false; // Mark as not listening immediately on end
+                // If hotword recognition stops and we are not transitioning to main recording, restart it
+                // This handles cases where it stops unexpectedly or due to inactivity
+                if (!isRecording && !isHotwordListening && !isSpeaking && !isSwitchingRecognition) {
+                    console.log("Hotword recognition ended, restarting...");
+                    setTimeout(initHotwordRecognition, 500); // Add a small delay
+                }
+            };
+
+            try {
+                hotwordRecognition.start();
+            } catch (e) {
+                console.error("Error starting hotword recognition:", e);
+                showMessage("Could not start hotword listener. Please ensure microphone is available and permissions are granted.", true);
+            }
+        }
+
+        /**
+         * Initializes and starts the "stop talking" hotword detection.
+         * This listener is only active when the assistant is speaking.
+         */
+        function initStopSpeakingRecognition() {
+            // Ensure any previous instance is stopped cleanly before creating a new one
+            if (stopSpeakingRecognition) {
+                stopSpeakingRecognition.stop();
+            }
+
+            stopSpeakingRecognition = new SpeechRecognition();
+            stopSpeakingRecognition.continuous = true; // Keep listening for "stop talking"
+            stopSpeakingRecognition.interimResults = false;
+            stopSpeakingRecognition.lang = languageSelect.value;
+            stopSpeakingRecognition.maxAlternatives = 5; // Increased for better detection
+
+            stopSpeakingRecognition.onstart = () => {
+                console.log("Listening for 'stop talking'...");
+            };
+
+            stopSpeakingRecognition.onresult = (event) => {
+                let stopCommandDetected = false;
+                for (let i = 0; i < event.results[event.results.length - 1].length; i++) {
+                    const alternative = event.results[event.results.length - 1][i].transcript.toLowerCase();
+                    if (alternative.includes('stop talking')) {
+                        stopCommandDetected = true;
+                        break;
+                    }
+                }
+
+                if (stopCommandDetected) {
+                    SpeechSynthesis.cancel(); // Stop current speech immediately
+                    stopSpeakingRecognition.stop(); // Stop this listener
+                    isSpeaking = false; // Update speaking state
+                    showMessage("Assistant stopped speaking.", false);
+                    console.log("Assistant stopped speaking due to 'stop talking' hotword.");
+                }
+            };
+
+            stopSpeakingRecognition.onerror = (event) => {
+                if (event.error === 'aborted') {
+                    if (isSwitchingRecognition) {
+                        console.log('Stop speaking recognition: Clean abort (intentional switch).');
+                    } else {
+                        console.error('Stop speaking recognition error: Unexpected abort.', event.error);
+                    }
+                    return;
+                }
+                // Only log 'no-speech' for stopSpeakingRecognition as info, it's expected behavior
+                if (event.error === 'no-speech') {
+                    console.info('Stop speaking recognition: No speech detected (normal behavior).');
+                } else {
+                    console.error('Stop speaking recognition error:', event.error);
+                }
+
+                // If there's an error and the assistant is still speaking, try to restart the listener
+                // Also check if SpeechSynthesis is actually speaking, not just if isSpeaking flag is true
+                if (isSpeaking && SpeechSynthesis.speaking && !isSwitchingRecognition) {
+                    console.warn("Stop speaking recognition error, attempting to restart...");
+                    stopSpeakingRecognition.stop(); // Stop current instance to allow restart
+                    initStopSpeakingRecognition(); // Re-initialize and start
+                } else {
+                    stopSpeakingRecognition.stop(); // Stop if assistant is not speaking or switching
+                }
+            };
+
+            stopSpeakingRecognition.onend = () => {
+                console.log("Stop speaking recognition ended.");
+                // If the assistant is still speaking, restart the stop speaking listener
+                // Also check if SpeechSynthesis is actually speaking, not just if isSpeaking flag is true
+                if (isSpeaking && SpeechSynthesis.speaking && !isSwitchingRecognition) {
+                    console.warn("Stop speaking recognition ended unexpectedly while assistant is speaking, restarting...");
+                    initStopSpeakingRecognition();
+                }
+            };
+
+            try {
+                stopSpeakingRecognition.start();
+            } catch (e) {
+                console.error("Error starting stop speaking recognition:", e);
+            }
+        }
+
+
+        /**
+         * Calls the Gemini API to get a response for the given prompt.
+         * @param {string} prompt - The user's input prompt.
+         * @param {string} targetLang - The language the assistant should respond in.
+         */
+        async function getLLMResponse(prompt, targetLang) {
+            try {
+                let chatHistory = [];
+                // Instruct the LLM to respond in the targetLang (selected by user)
+                chatHistory.push({ role: "user", parts: [{ text: `Respond in ${targetLang} to the following: ${prompt}` }] });
+                const payload = { contents: chatHistory };
+                // Use the provided API key here (empty string for Canvas environment to inject)
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API error: ${response.status} - ${errorData.error.message || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    let text = result.candidates[0].content.parts[0].text;
+                    // Remove any asterisks from the text
+                    text = text.replace(/\*/g, '');
+                    assistantOutputDiv.textContent = `Assistant: "${text}"`;
+                    // Speak the response in the targetLang (selected by user)
+                    await speakText(text, targetLang);
+                } else {
+                    showMessage("No valid response from the assistant. Please try again.");
+                    console.error("Unexpected LLM response structure:", result);
+                }
+            } catch (error) {
+                // Check if the error is specifically the "interrupted" speech synthesis error
+                if (error.message && error.message.includes('Speech synthesis failed: interrupted')) {
+                    console.log("Caught intentional speech interruption error, not reporting as API failure.");
+                    // No need to show a message here, as speakText already handles it.
+                } else {
+                    showMessage(`Failed to get response from assistant: ${error.message}`);
+                    console.error("Error calling Gemini API:", error);
+                }
+            } finally {
+                setLoading(false); // Hide loading spinner and re-enable button
+                // After LLM response, always go back to hotword listening
+                initHotwordRecognition();
+            }
+        }
+
+        /**
+         * Speaks the given text using Speech Synthesis.
+         * Returns a Promise that resolves when speech finishes or rejects on error.
+         * @param {string} text - The text to speak.
+         * @param {string} lang - The language code for speech synthesis (e.g., 'en-US').
+         * @returns {Promise<void>} A promise that resolves when speech is complete.
+         */
+        function speakText(text, lang) {
+            return new Promise((resolve, reject) => {
+                if (!SpeechSynthesis) {
+                    showMessage("Speech Synthesis is not supported in your browser. Cannot speak the response.", false);
+                    resolve(); // Resolve immediately if speaking is not possible
+                    return;
+                }
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1; // Speed of speech
+                utterance.pitch = 1; // Pitch of speech
+
+                // Get available voices
+                const voices = SpeechSynthesis.getVoices();
+                let selectedVoice = null;
+
+                // Try to find an exact match for the language code (e.g., 'en-US')
+                selectedVoice = voices.find(voice => voice.lang === lang);
+
+                // If no exact match, try to find a voice that matches the primary language (e.g., 'en' for 'en-US')
+                if (!selectedVoice) {
+                    const primaryLang = lang.split('-')[0];
+                    selectedVoice = voices.find(voice => voice.lang.startsWith(primaryLang));
+                }
+
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                    utterance.lang = selectedVoice.lang; // Use the actual language of the selected voice
+                    console.log(`Using voice: ${selectedVoice.name} (${selectedVoice.lang}) for text: "${text}"`);
+                    hideMessage(); // Clear any previous voice-related error messages
+                } else {
+                    // Fallback to default if no suitable voice is found
+                    utterance.lang = lang; // Still set requested lang, but browser will use default voice
+                    showMessage(`No specific voice found for "${lang}". Using a default voice.`, false);
+                    console.warn(`No specific voice found for "${lang}". Falling back to default.`);
+                }
+
+                utterance.onstart = () => {
+                    isSpeaking = true;
+                    // Stop other recognitions before starting stopSpeakingRecognition
+                    // This is crucial to prevent conflicts and ensure the stop listener can run.
+                    stopAllRecognitions();
+                    initStopSpeakingRecognition(); // Start listening for "stop talking" when assistant starts speaking
+                };
+
+                utterance.onend = () => {
+                    console.log("Speech synthesis finished.");
+                    isSpeaking = false;
+                    if (stopSpeakingRecognition) {
+                        stopSpeakingRecognition.stop(); // Stop the "stop talking" listener
+                    }
+                    resolve(); // Resolve the promise when speech ends
+                };
+
+                utterance.onerror = (event) => {
+                    // If the error is 'interrupted', it means the user explicitly stopped speech.
+                    // In this case, we resolve the promise as the interruption was successful.
+                    if (event.error === 'interrupted') {
+                        console.log("Speech was intentionally interrupted.");
+                        isSpeaking = false; // Update speaking state
+                        if (stopSpeakingRecognition) {
+                            stopSpeakingRecognition.stop(); // Stop the "stop talking" listener
+                        }
+                        resolve(); // Resolve the promise as the interruption was successful
+                        return; // IMPORTANT: Prevent further execution in this handler
+                    } else if (event.error === 'not-allowed') {
+                        // Specific handling for 'not-allowed' error
+                        console.error('Speech synthesis error: not-allowed. This is often due to browser autoplay policies. Please ensure you have interacted with the page (e.g., clicked the button) or check browser settings for audio autoplay permissions.', event.error);
+                        showMessage(`Speech synthesis failed: ${event.error}. This is often due to browser autoplay policies. Please try interacting with the page (e.g., by clicking the button) or check your browser's audio autoplay permissions and system's text-to-speech settings.`, true);
+                        isSpeaking = false;
+                        if (stopSpeakingRecognition) {
+                            stopSpeakingRecognition.stop();
+                        }
+                        reject(new Error(`Speech synthesis failed: ${event.error}`));
+                        return;
+                    }
+                    else {
+                        // For other errors, show a message and reject the promise
+                        console.error('Speech synthesis error:', event.error); // Log other errors
+                        showMessage(`Speech synthesis failed: ${event.error}. Your browser might not support speaking in ${lang}.`, true);
+                        isSpeaking = false;
+                        if (stopSpeakingRecognition) {
+                            stopSpeakingRecognition.stop(); // Stop the "stop talking" listener
+                        }
+                        reject(new Error(`Speech synthesis failed: ${event.error}`)); // Reject the promise on error
+                    }
+                };
+
+                SpeechSynthesis.speak(utterance);
+            });
+        }
+
+        // Ensure voices are loaded before trying to use them.
+        // This event fires when the list of voices available to the system changes.
+        if (SpeechSynthesis && SpeechSynthesis.onvoiceschanged !== undefined) {
+            SpeechSynthesis.onvoiceschanged = () => {
+                console.log("SpeechSynthesis voices changed.");
+                // No need to explicitly re-initialize speakText, as it fetches voices dynamically.
+            };
+        }
+
+        // Event listener for the record button
+        recordButton.addEventListener('click', () => {
+            if (isHotwordListening) {
+                // If hotword listening is active, stop it
+                stopAllRecognitions();
+                buttonText.textContent = "Start Listening for Hotword";
+                recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)'; // Restore gradient
+                showMessage("Hotword listening stopped.", false);
+            } else if (isRecording) {
+                // If main recording is active, stop it
+                stopAllRecognitions();
+                buttonText.textContent = "Start Listening for Hotword";
+                recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)'; // Restore gradient
+                showMessage("Recording stopped.", false);
+                // After stopping, go back to listening for hotword
+                initHotwordRecognition();
+            } else if (isSpeaking) {
+                // If assistant is speaking, stop it
+                SpeechSynthesis.cancel();
+                isSpeaking = false;
+                if (stopSpeakingRecognition) {
+                    stopSpeakingRecognition.stop();
+                }
+                showMessage("Assistant stopped speaking manually.", false);
+                initHotwordRecognition(); // Go back to hotword listening
+            }
+            else {
+                // If neither is active, start hotword listening
+                initHotwordRecognition();
+            }
+        });
+
+        // Initial state: Start listening for the hotword when the window loads
+        window.onload = () => {
+            initHotwordRecognition();
+            showMessage("Select your input language, then click 'Start Listening for Hotword'. Say 'Jarvis' to activate the assistant. Say 'stop talking' to interrupt the assistant.", false);
+        };
+    </script>
+</body>
+</html>
