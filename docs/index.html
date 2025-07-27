@@ -1,1 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jarvis meaning jarvis ai by innovator Amer Abdullah Founder of Raji Technology </title>
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for a modern look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Softer shadow */
+            padding: 2.5rem; /* More padding */
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .text-area {
+            min-height: 100px;
+            background-color: #f8fafc; /* Lighter input background */
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem; /* Rounded text areas */
+            padding: 1rem;
+            text-align: left;
+            word-wrap: break-word; /* Ensure text wraps */
+            overflow-y: auto; /* Scroll if content overflows */
+            font-size: 1rem;
+            color: #334155;
+        }
+        .button-primary {
+            background-image: linear-gradient(to right, #6366f1, #8b5cf6); /* Gradient button */
+            color: white;
+            padding: 0.85rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+            cursor: pointer;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .button-primary:hover {
+            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+        }
+        .button-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .button-primary:disabled {
+            background-image: none;
+            background-color: #cbd5e1; /* Gray out when disabled */
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .message-box {
+            background-color: #ffe4e6; /* Light red for errors */
+            color: #dc2626; /* Darker red text */
+            border: 1px solid #fecaca;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: left;
+            font-size: 0.9rem;
+            display: none; /* Hidden by default */
+        }
+        .message-box.show {
+            display: block;
+        }
+        .select-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: left;
+        }
+        .select-container select {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            background-color: #f8fafc;
+            font-size: 1rem;
+            color: #334155;
+            appearance: none; /* Remove default arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-gray-800">jarvis meaning jarvis ai by innovator Amer Abdullah Founder of Raji Technology </h1>
 
+        <div class="select-container">
+            <label for="language-select" class="text-gray-700 font-medium">Select Input Language:</label>
+            <select id="language-select">
+                <option value="en-US">English (US)</option>
+                <option value="es-ES">Spanish (Spain)</option>
+                <option value="fr-FR">French (France)</option>
+                <option value="de-DE">German (Germany)</option>
+                <option value="it-IT">Italian (Italy)</option>
+                <option value="pt-BR">Portuguese (Brazil)</option>
+                <option value="zh-CN">Chinese (Mandarin, Simplified)</option>
+                <option value="ja-JP">Japanese (Japan)</option>
+                <option value="ko-KR">Korean (South Korea)</option>
+                <option value="ar-SA">Arabic (Saudi Arabia)</option>
+                <option value="ru-RU">Russian (Russia)</option>
+                <option value="hi-IN">Hindi (India)</option>
+                <option value="am-ET">Amharic (Ethiopia)</option>
+                <!-- Add more languages as needed -->
+            </select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label for="user-input" class="text-left text-gray-700 font-medium">Your Input:</label>
+            <div id="user-input" class="text-area"></div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label for="assistant-output" class="text-left text-gray-700 font-medium">Assistant's Response:</label>
+            <div id="assistant-output" class="text-area"></div>
+        </div>
+
+        <button id="record-button" class="button-primary">
+            <span id="button-text">Start Recording</span>
+            <div id="loading-spinner" class="loading-spinner hidden"></div>
+        </button>
+
+        <div id="message-box" class="message-box"></div>
+    </div>
+
+    <script type="module">
+        // Get references to DOM elements
+        const recordButton = document.getElementById('record-button');
+        const buttonText = document.getElementById('button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const userInputDiv = document.getElementById('user-input');
+        const assistantOutputDiv = document.getElementById('assistant-output');
+        const messageBox = document.getElementById('message-box');
+        const languageSelect = document.getElementById('language-select');
+
+        // Check for Web Speech API support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const SpeechSynthesis = window.speechSynthesis;
+
+        if (!SpeechRecognition) {
+            showMessage("Your browser does not support Speech Recognition. Please use Chrome or Edge for full functionality.");
+            recordButton.disabled = true;
+        }
+        if (!SpeechSynthesis) {
+            showMessage("Your browser does not support Speech Synthesis. Voice output will not be available.", false);
+        }
+
+        let recognition; // Declare recognition globally
+        let isRecording = false;
+
+        // Function to display messages to the user
+        function showMessage(message, isError = true) {
+            messageBox.textContent = message;
+            messageBox.classList.add('show');
+            if (isError) {
+                messageBox.style.backgroundColor = '#ffe4e6';
+                messageBox.style.color = '#dc2626';
+            } else {
+                messageBox.style.backgroundColor = '#d1fae5';
+                messageBox.style.color = '#065f46';
+            }
+        }
+
+        // Function to hide messages
+        function hideMessage() {
+            messageBox.classList.remove('show');
+        }
+
+        // Function to set loading state
+        function setLoading(isLoading) {
+            if (isLoading) {
+                buttonText.textContent = 'Thinking...';
+                loadingSpinner.classList.remove('hidden');
+                recordButton.disabled = true;
+                languageSelect.disabled = true; // Disable language select during processing
+            } else {
+                buttonText.textContent = 'Start Recording';
+                loadingSpinner.classList.add('hidden');
+                recordButton.disabled = false;
+                languageSelect.disabled = false; // Enable language select
+            }
+        }
+
+        // Initialize Speech Recognition
+        function initSpeechRecognition() {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false; // Capture a single phrase
+            recognition.interimResults = false; // Only return final results
+            recognition.lang = languageSelect.value; // Set the language based on user selection
+
+            // Event handler when speech recognition starts
+            recognition.onstart = () => {
+                isRecording = true;
+                buttonText.textContent = 'Speak Now...';
+                recordButton.classList.add('bg-red-500', 'hover:bg-red-600'); // Indicate recording
+                recordButton.classList.remove('background-image'); // Remove gradient during recording
+                recordButton.style.backgroundImage = 'none';
+                hideMessage();
+                userInputDiv.textContent = ''; // Clear previous input
+                assistantOutputDiv.textContent = ''; // Clear previous output
+            };
+
+            // Event handler when a result is received
+            recognition.onresult = async (event) => {
+                const transcript = event.results[0][0].transcript;
+                // Use the detected language from the speech recognition result, or fallback to selected language
+                const detectedLang = event.results[0][0].lang || languageSelect.value || navigator.language || 'en-US';
+
+                userInputDiv.textContent = `You: "${transcript}" (Detected Language: ${detectedLang})`;
+                console.log(`Transcript: "${transcript}"`);
+                console.log(`Detected Language: ${detectedLang}`);
+
+                setLoading(true); // Show loading spinner
+                // Pass the selected language to the LLM to ensure response is in that language
+                await getLLMResponse(transcript, languageSelect.value);
+            };
+
+            // Event handler for errors
+            recognition.onerror = (event) => {
+                isRecording = false;
+                recordButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+                recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)'; // Restore gradient
+                setLoading(false);
+                if (event.error === 'not-allowed') {
+                    showMessage("Microphone access denied. Please allow microphone access in your browser settings.");
+                } else if (event.error === 'no-speech') {
+                    showMessage("No speech detected. Please try again.");
+                } else {
+                    showMessage(`Speech recognition error: ${event.error}`);
+                }
+                console.error('Speech recognition error:', event.error);
+            };
+
+            // Event handler when speech recognition ends
+            recognition.onend = () => {
+                isRecording = false;
+                recordButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+                recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)'; // Restore gradient
+                if (!loadingSpinner.classList.contains('hidden')) { // Only if LLM is still processing
+                    buttonText.textContent = 'Start Recording';
+                }
+            };
+        }
+
+        // Call the LLM (Gemini API) to get a response
+        async function getLLMResponse(prompt, targetLang) {
+            try {
+                let chatHistory = [];
+                // Instruct the LLM to respond in the targetLang (selected by user)
+                chatHistory.push({ role: "user", parts: [{ text: `Respond in ${targetLang} to the following: ${prompt}` }] });
+                const payload = { contents: chatHistory };
+                // Use the provided API key here
+                const apiKey = "AIzaSyBkolxGXRE_xsQqmlP5rvIsUp0zmlfvMQE"; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API error: ${response.status} - ${errorData.error.message || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    assistantOutputDiv.textContent = `Assistant: "${text}"`;
+                    // Speak the response in the targetLang (selected by user)
+                    speakText(text, targetLang);
+                } else {
+                    showMessage("No valid response from the assistant. Please try again.");
+                    console.error("Unexpected LLM response structure:", result);
+                }
+            } catch (error) {
+                showMessage(`Failed to get response from assistant: ${error.message}`);
+                console.error("Error calling Gemini API:", error);
+            } finally {
+                setLoading(false); // Hide loading spinner
+            }
+        }
+
+        // Function to speak the given text
+        function speakText(text, lang) {
+            if (!SpeechSynthesis) {
+                showMessage("Speech Synthesis is not supported in your browser. Cannot speak the response.", false);
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1; // Speed of speech
+            utterance.pitch = 1; // Pitch of speech
+
+            // Get available voices
+            const voices = SpeechSynthesis.getVoices();
+            console.log("Available voices:", voices);
+
+            let selectedVoice = null;
+            // Try to find an exact match for the language code (e.g., 'en-US')
+            selectedVoice = voices.find(voice => voice.lang === lang);
+
+            // If no exact match, try to find a voice that matches the primary language (e.g., 'en' for 'en-US')
+            if (!selectedVoice) {
+                const primaryLang = lang.split('-')[0];
+                selectedVoice = voices.find(voice => voice.lang.startsWith(primaryLang));
+            }
+
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+                utterance.lang = selectedVoice.lang; // Use the actual language of the selected voice
+                console.log(`Using voice: ${selectedVoice.name} (${selectedVoice.lang}) for text: "${text}"`);
+                hideMessage(); // Clear any previous voice-related error messages
+            } else {
+                // Fallback to default if no suitable voice is found
+                utterance.lang = lang; // Still set requested lang, but browser will use default voice
+                showMessage(`No specific voice found for "${lang}". Using a default voice.`, false);
+                console.warn(`No specific voice found for "${lang}". Falling back to default.`);
+            }
+
+            utterance.onerror = (event) => {
+                console.error('Speech synthesis error:', event.error);
+                showMessage(`Speech synthesis failed: ${event.error}. Your browser might not support speaking in ${lang}.`, true);
+            };
+
+            SpeechSynthesis.speak(utterance);
+        }
+
+        // Ensure voices are loaded before trying to use them
+        if (SpeechSynthesis && SpeechSynthesis.onvoiceschanged !== undefined) {
+            SpeechSynthesis.onvoiceschanged = () => {
+                console.log("Voices changed, re-initializing speakText capabilities.");
+                // You might want to re-run a check for voices here if needed
+            };
+        }
+
+
+        // Event listener for the record button
+        recordButton.addEventListener('click', () => {
+            if (isRecording) {
+                recognition.stop(); // Stop recording if already active
+            } else {
+                initSpeechRecognition(); // Initialize and start new recognition
+                recognition.start();
+            }
+        });
+
+        // Initial message to the user
+        showMessage("Select your input language, then click 'Start Recording' and speak into your microphone. The assistant will respond in the language you selected.", false);
+    </script>
+</body>
+</html>
