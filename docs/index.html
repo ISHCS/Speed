@@ -438,18 +438,16 @@
                     showMessage("No speech detected. Please try again.", false);
                     console.warn('Main recognition error: no-speech');
                 } else if (event.error === 'network') {
-                    showMessage("Speech recognition service is unavailable due to a network error. Please check your internet connection.", true);
+                    // Explicitly handle network error for user feedback
+                    showMessage("Speech recognition service is unavailable due to a network error. Attempting to restart listener...", true);
                     console.error('Main recognition error: network');
+                    // Immediately try to go back to hotword listening on network error
+                    setTimeout(() => initHotwordRecognition(), 1000);
                 } else {
                     showMessage(`Speech recognition error: ${event.error}`, true);
                     console.error('Main recognition error:', event.error);
                 }
                 setLoading(false);
-                // After an error, we should always try to go back to hotword listening
-                if (!isSwitchingRecognition && !isSpeaking) {
-                    showMessage("Preparing to listen for hotword again...", false);
-                    setTimeout(() => initHotwordRecognition(), 1000);
-                }
             };
 
             recognition.onend = () => {
@@ -457,6 +455,7 @@
                 recordButton.classList.remove('bg-red-500', 'hover:bg-red-600');
                 recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)';
                 console.log('Main recognition ended.');
+                // Always try to go back to hotword listening unless intentionally stopped or speaking
                 if (!isSwitchingRecognition && !isSpeaking) {
                     showMessage("Preparing to listen for hotword again...", false);
                     setTimeout(() => initHotwordRecognition(), 1000);
@@ -521,16 +520,21 @@
                 } else if (event.error === 'not-allowed') {
                     showMessage("Microphone access denied. Please click the button to try again, or check your browser's site settings to enable the microphone.", true);
                     console.error('Hotword recognition error: not-allowed');
-                    // This is a critical error, don't restart automatically
                     return; 
                 } else if (event.error === 'audio-capture') {
                     showMessage("Could not access the microphone. Please check your system's microphone permissions and ensure no other applications are using it.", true);
                     console.error('Hotword recognition error: audio-capture');
-                    // This is a critical error, don't restart automatically
                     return; 
+                } else if (event.error === 'network') {
+                    showMessage("Network connection lost. Attempting to restart listener...", true);
+                    console.error('Hotword recognition error: network');
+                    // Explicitly try to restart on network error
+                    setTimeout(() => initHotwordRecognition(), 1000);
                 } else {
                     showMessage(`Hotword recognition error: ${event.error}`, true);
                     console.error('Hotword recognition error:', event.error);
+                    // On any other error, restart the listener
+                    setTimeout(() => initHotwordRecognition(), 1000);
                 }
             };
 
@@ -539,6 +543,7 @@
                 console.log("Hotword recognition ended. State transition handled by app logic.");
                 // If it wasn't an intentional stop, restart it after a delay.
                 if (!isSwitchingRecognition && !isSpeaking) {
+                    showMessage("Listener stopped unexpectedly. Restarting...", false);
                     console.log("Hotword recognition ended unexpectedly, restarting...");
                     setTimeout(() => {
                         initHotwordRecognition();
@@ -715,6 +720,8 @@
             
             chatHistory.push({ role: "user", parts: [{ text: instruction }] });
             const payload = { contents: chatHistory };
+            // The apiKey variable is automatically populated by the environment.
+            // Do not provide a manual API key here.
             const apiKey = ""; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
@@ -797,6 +804,8 @@
                 model: "gemini-2.5-flash-preview-tts"
             };
             
+            // The apiKey variable is automatically populated by the environment.
+            // Do not provide a manual API key here.
             const apiKey = ""; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
             
