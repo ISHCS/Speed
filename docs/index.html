@@ -353,10 +353,10 @@
             if (stopSpeakingRecognition) {
                 stopSpeakingRecognition.stop();
             }
-            // Reset flag after a delay to allow 'aborted' events to fire and be handled.
+            // Reset flag after a slightly longer delay to allow 'aborted' events to fire and be handled.
             setTimeout(() => {
                 isSwitchingRecognition = false;
-            }, 500);
+            }, 1000);
         }
         
         /**
@@ -396,6 +396,7 @@
          * This is called after the "Jarvis" hotword is detected.
          */
         function initSpeechRecognition() {
+            console.log("Starting main recognition session.");
             stopAllRecognitions();
 
             recognition = new SpeechRecognition();
@@ -414,6 +415,7 @@
                 hideMessage();
                 userInputDiv.textContent = '';
                 assistantOutputDiv.textContent = '';
+                console.log('Main recognition started.');
             };
 
             recognition.onresult = async (event) => {
@@ -431,16 +433,22 @@
                     console.log('Main recognition: Clean abort (intentional switch).');
                 } else if (event.error === 'not-allowed') {
                     showMessage("Microphone access denied. Please allow microphone access in your browser settings.", true);
+                    console.error('Main recognition error: not-allowed');
                 } else if (event.error === 'no-speech') {
                     showMessage("No speech detected. Please try again.", false);
+                    console.warn('Main recognition error: no-speech');
                 } else if (event.error === 'network') {
                     showMessage("Speech recognition service is unavailable due to a network error. Please check your internet connection.", true);
+                    console.error('Main recognition error: network');
                 } else {
                     showMessage(`Speech recognition error: ${event.error}`, true);
+                    console.error('Main recognition error:', event.error);
                 }
                 setLoading(false);
+                // After an error, we should always try to go back to hotword listening
                 if (!isSwitchingRecognition && !isSpeaking) {
-                    initHotwordRecognition();
+                    showMessage("Preparing to listen for hotword again...", false);
+                    setTimeout(() => initHotwordRecognition(), 1000);
                 }
             };
 
@@ -448,8 +456,10 @@
                 isRecording = false;
                 recordButton.classList.remove('bg-red-500', 'hover:bg-red-600');
                 recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)';
+                console.log('Main recognition ended.');
                 if (!isSwitchingRecognition && !isSpeaking) {
-                     initHotwordRecognition();
+                    showMessage("Preparing to listen for hotword again...", false);
+                    setTimeout(() => initHotwordRecognition(), 1000);
                 }
             };
 
@@ -458,7 +468,7 @@
             } catch (e) {
                 console.error("Error starting main recognition:", e);
                 showMessage("Could not start main recognition. Please ensure microphone is available and permissions are granted.", true);
-                initHotwordRecognition();
+                setTimeout(() => initHotwordRecognition(), 1000);
             }
         }
 
@@ -466,6 +476,7 @@
          * Initializes and starts the hotword detection for "Jarvis".
          */
         function initHotwordRecognition() {
+            console.log("Starting hotword recognition session.");
             stopAllRecognitions();
             isHotwordListening = true; // Set state immediately
 
@@ -481,6 +492,7 @@
                 recordButton.classList.remove('speaking-active');
                 recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)';
                 hideMessage();
+                console.log('Hotword recognition started.');
             };
 
             hotwordRecognition.onresult = async (event) => {
@@ -488,6 +500,7 @@
                 for (let i = 0; i < lastResult.length; i++) {
                     const alternative = lastResult[i].transcript.toLowerCase();
                     if (alternative.includes('jarvis')) {
+                        console.log("Hotword 'Jarvis' detected!");
                         stopAllRecognitions();
                         showMessage("Hotword detected! How can I help you?", false);
                         await speakText("How can I help you?", languageSelect.value, initSpeechRecognition);
@@ -499,8 +512,8 @@
             hotwordRecognition.onerror = (event) => {
                 isHotwordListening = false;
                 // The 'aborted' error is expected when another recognition session starts.
-                // We handle this by not logging it as an error.
                 if (event.error === 'aborted') {
+                    console.log('Hotword recognition: Clean abort (intentional switch).');
                     return;
                 }
                 if (event.error === 'no-speech') {
@@ -522,11 +535,12 @@
             hotwordRecognition.onend = () => {
                 isHotwordListening = false;
                 console.log("Hotword recognition ended. State transition handled by app logic.");
-                // If it wasn't an intentional stop, restart it.
+                // If it wasn't an intentional stop, restart it after a delay.
                 if (!isSwitchingRecognition && !isSpeaking) {
+                    console.log("Hotword recognition ended unexpectedly, restarting...");
                     setTimeout(() => {
                         initHotwordRecognition();
-                    }, 500); 
+                    }, 1000); 
                 }
             };
 
@@ -544,6 +558,7 @@
          * This listener is only active when the assistant is speaking.
          */
         function initStopSpeakingHotwordListener() {
+            console.log("Starting 'stop speaking' hotword listener.");
             stopAllRecognitions(); // Stop all others first
             
             stopSpeakingRecognition = new SpeechRecognition();
@@ -577,7 +592,6 @@
             
             stopSpeakingRecognition.onerror = (event) => {
                 // The 'aborted' error is expected when another recognition session starts.
-                // We handle this by not logging it as an error.
                 if (event.error === 'aborted') {
                     return;
                 }
@@ -589,7 +603,8 @@
             stopSpeakingRecognition.onend = () => {
                 console.log("Stop speaking recognition ended.");
                 if (!isSwitchingRecognition && !isSpeaking) {
-                     initHotwordRecognition();
+                    showMessage("Preparing to listen for hotword again...", false);
+                    setTimeout(() => initHotwordRecognition(), 1000);
                 }
             };
 
@@ -692,12 +707,13 @@
          */
         async function getLLMResponse(prompt, targetLang) {
             let chatHistory = [];
-            // Refine the prompt to be more direct and concise.
-            const instruction = `Respond to the following query concisely and conversationally in the language code provided: ${targetLang}. The user query is: "${prompt}".`;
+            // Refine the prompt to be more direct and concise and to avoid markdown.
+            // This is a key change to improve compatibility with the TTS model.
+            const instruction = `Respond to the following query concisely and conversationally in the language code provided: ${targetLang}. Use only plain text, without any markdown formatting or special characters. The user query is: "${prompt}".`;
             
             chatHistory.push({ role: "user", parts: [{ text: instruction }] });
             const payload = { contents: chatHistory };
-            const apiKey = "AIzaSyAWvW8wXyy62WbFGQzDGOQpVy537BZCOD0"; 
+            const apiKey = ""; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
             try {
@@ -718,13 +734,11 @@
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     let text = result.candidates[0].content.parts[0].text;
-                    // Clean up markdown formatting if present
-                    text = text.replace(/\*/g, '').replace(/#/g, '');
                     
                     if (text.trim() === '') {
                         assistantOutputDiv.textContent = `Assistant: "No response."`;
                         showMessage("Assistant had no response.", false);
-                        initHotwordRecognition();
+                        setTimeout(() => initHotwordRecognition(), 1000);
                         return;
                     }
 
@@ -734,12 +748,12 @@
                 } else {
                     showMessage("No valid response from the assistant. Please try again.", true);
                     console.error("Unexpected LLM response structure:", result);
-                    initHotwordRecognition();
+                    setTimeout(() => initHotwordRecognition(), 1000);
                 }
             } catch (error) {
                 showMessage(`Failed to get response from assistant: ${error.message}`, true);
                 console.error("Error calling Gemini API:", error);
-                initHotwordRecognition();
+                setTimeout(() => initHotwordRecognition(), 1000);
             } finally {
                 setLoading(false);
             }
@@ -781,7 +795,7 @@
                 model: "gemini-2.5-flash-preview-tts"
             };
             
-            const apiKey = "AIzaSyAWvW8wXyy62WbFGQzDGOQpVy537BZCOD0"; 
+            const apiKey = ""; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
             
             try {
@@ -942,7 +956,8 @@
             // Stopping all recognitions is important before a language change
             // to ensure the new recognition object is created with the new language.
             stopAllRecognitions();
-            initHotwordRecognition();
+            showMessage("Language changed. Preparing to listen again...", false);
+            setTimeout(() => initHotwordRecognition(), 1000);
         });
     </script>
 </body>
