@@ -521,6 +521,8 @@
                 } else if (event.error === 'not-allowed') {
                     showMessage("Microphone access denied. Please click the button to try again, or check your browser's site settings to enable the microphone.", true);
                     console.error('Hotword recognition error: not-allowed');
+                    // This is a critical error, don't restart automatically
+                    return; 
                 } else if (event.error === 'audio-capture') {
                     showMessage("Could not access the microphone. Please check your system's microphone permissions and ensure no other applications are using it.", true);
                     console.error('Hotword recognition error: audio-capture');
