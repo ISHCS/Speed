@@ -1,1 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice AI Assistant by Raji Technology</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for a modern look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Softer shadow */
+            padding: 2.5rem; /* More padding */
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .text-area {
+            min-height: 100px;
+            background-color: #f8fafc; /* Lighter input background */
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem; /* Rounded text areas */
+            padding: 1rem;
+            text-align: left;
+            word-wrap: break-word; /* Ensure text wraps */
+            overflow-y: auto; /* Scroll if content overflows */
+            font-size: 1rem;
+            color: #334155;
+            white-space: pre-wrap; /* Preserve whitespace for better display of long text */
+        }
+        .button-primary {
+            background-image: linear-gradient(to right, #6366f1, #8b5cf6); /* Gradient button */
+            color: white;
+            padding: 0.85rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+            cursor: pointer;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .button-primary:hover {
+            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+        }
+        .button-primary:active {
+            transform: translateY(0);
+            box-shadow: 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .button-primary:disabled {
+            background-image: none;
+            background-color: #cbd5e1; /* Gray out when disabled */
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .message-box {
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: left;
+            font-size: 0.9rem;
+            display: none; /* Hidden by default */
+        }
+        .message-box.show {
+            display: block;
+        }
+        .message-box.error {
+            background-color: #ffe4e6; /* Light red for errors */
+            color: #dc2626; /* Darker red text */
+            border: 1px solid #fecaca;
+        }
+        .message-box.info {
+            background-color: #d1fae5; /* Light green for info */
+            color: #065f46; /* Darker green text */
+            border: 1px solid #a7f3d0;
+        }
+        .select-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: left;
+        }
+        .select-container select {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            background-color: #f8fafc;
+            font-size: 1rem;
+            color: #334155;
+            appearance: none; /* Remove default arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+        .listening-hotword {
+            animation: pulse 2s infinite;
+        }
+        .speaking-active {
+            background-image: linear-gradient(to right, #10b981, #059669); /* Green for speaking */
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .login-form input {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            background-color: #f8fafc;
+            font-size: 1rem;
+            color: #334155;
+            width: 100%;
+        }
+        .login-form label {
+            text-align: left;
+            font-weight: 500;
+            color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Form Section -->
+        <div id="login-section" class="login-form">
+            <h1 class="text-3xl font-bold text-gray-800">Welcome to RAJI TECHNOLOGY AI</h1>
+            <p class="text-gray-600">Please log in to continue.</p>
+            <div>
+                <label for="username">Username:</label>
+                <input type="text" id="username" placeholder="Enter your username">
+            </div>
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" id="password" placeholder="Enter your password">
+            </div>
+            <button id="login-button" class="button-primary">Log In</button>
+            <div id="login-message" class="message-box" aria-live="assertive"></div>
+        </div>
 
+        <!-- Voice Assistant App Section (Initially Hidden) -->
+        <div id="app-section" class="hidden">
+            <h1 class="text-3xl font-bold text-gray-800">Voice AI Assistant</h1>
+
+            <div class="select-container">
+                <label for="language-select" class="text-gray-700 font-medium">Select Input Language:</label>
+                <select id="language-select" class="w-full">
+                    <option value="en-US">English (US)</option>
+                    <option value="es-ES">Spanish (Spain)</option>
+                    <option value="fr-FR">French (France)</option>
+                    <option value="de-DE">German (Germany)</option>
+                    <option value="it-IT">Italian (Italy)</option>
+                    <option value="pt-BR">Portuguese (Brazil)</option>
+                    <option value="zh-CN">Chinese (Mandarin, Simplified)</option>
+                    <option value="ja-JP">Japanese (Japan)</option>
+                    <option value="ko-KR">Korean (South Korea)</option>
+                    <option value="ar-SA">Arabic (Saudi Arabia)</option>
+                    <option value="ru-RU">Russian (Russia)</option>
+                    <option value="hi-IN">Hindi (India)</option>
+                    <option value="am-ET">Amharic (Ethiopia)</option>
+                </select>
+            </div>
+
+            <div class="select-container">
+                <label for="voice-select" class="text-gray-700 font-medium">Select Speaker Voice:</label>
+                <select id="voice-select" class="w-full"></select>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="user-input" class="text-left text-gray-700 font-medium">Your Input:</label>
+                <div id="user-input" class="text-area" aria-live="polite"></div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="assistant-output" class="text-left text-gray-700 font-medium">Assistant's Response:</label>
+                <div id="assistant-output" class="text-area" aria-live="polite"></div>
+            </div>
+
+            <button id="record-button" class="button-primary">
+                <span id="button-text">Start Listening for Hotword</span>
+                <div id="loading-spinner" class="loading-spinner hidden"></div>
+            </button>
+            <button id="logout-button" class="button-primary !bg-red-500 hover:!bg-red-600">Logout</button>
+        </div>
+        <div id="message-box" class="message-box" aria-live="assertive"></div>
+    </div>
+
+    <script type="module">
+        // Get references to DOM elements
+        const loginSection = document.getElementById('login-section');
+        const appSection = document.getElementById('app-section');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const loginButton = document.getElementById('login-button');
+        const logoutButton = document.getElementById('logout-button');
+        const loginMessageBox = document.getElementById('login-message');
+
+        const recordButton = document.getElementById('record-button');
+        const buttonText = document.getElementById('button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const userInputDiv = document.getElementById('user-input');
+        const assistantOutputDiv = document.getElementById('assistant-output');
+        const messageBox = document.getElementById('message-box');
+        const languageSelect = document.getElementById('language-select');
+        const voiceSelect = document.getElementById('voice-select');
+
+        // Check for Web Speech API support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            showMessage("Your browser does not support Speech Recognition. Please use a modern browser like Chrome or Edge.", true);
+            recordButton.disabled = true;
+        }
+
+        let recognition; // Main recognition for user queries after hotword
+        let hotwordRecognition; // Recognition for "jarvis" hotword
+        let stopSpeakingRecognition; // Recognition for "stop talking" hotword
+        let isRecording = false; // True when main recognition is active
+        let isHotwordListening = false; // True when hotword recognition is active
+        let isSpeaking = false; // True when Speech Synthesis is actively speaking
+        let isSwitchingRecognition = false; // Flag to indicate intentional stopping of recognition
+        let currentAudio; // Reference to the currently playing audio element
+
+        // Prebuilt voices for gemini-2.5-flash-preview-tts
+        const prebuiltVoices = [
+            { name: "Kore", label: "Kore (Firm)" },
+            { name: "Puck", label: "Puck (Upbeat)" },
+            { name: "Zephyr", label: "Zephyr (Bright)" },
+            { name: "Charon", label: "Charon (Informative)" },
+            { name: "Fenrir", label: "Fenrir (Excitable)" },
+            { name: "Leda", label: "Leda (Youthful)" },
+            { name: "Orus", label: "Orus (Firm)" },
+            { name: "Aoede", label: "Aoede (Breezy)" },
+            { name: "Callirrhoe", label: "Callirrhoe (Easy-going)" },
+            { name: "Autonoe", label: "Autonoe (Bright)" },
+            { name: "Enceladus", label: "Enceladus (Breathy)" },
+            { name: "Iapetus", label: "Iapetus (Clear)" },
+            { name: "Umbriel", label: "Umbriel (Easy-going)" },
+            { name: "Algieba", label: "Algieba (Smooth)" },
+            { name: "Despina", label: "Despina (Smooth)" },
+            { name: "Erinome", label: "Erinome (Clear)" },
+            { name: "Algenib", label: "Algenib (Gravelly)" },
+            { name: "Rasalgethi", label: "Rasalgethi (Informative)" },
+            { name: "Laomedeia", label: "Laomedeia (Upbeat)" },
+            { name: "Achernar", label: "Achernar (Soft)" },
+            { name: "Alnilam", label: "Alnilam (Firm)" },
+            { name: "Schedar", label: "Schedar (Even)" },
+            { name: "Gacrux", label: "Gacrux (Mature)" },
+            { name: "Pulcherrima", label: "Pulcherrima (Forward)" },
+            { name: "Achird", label: "Achird (Friendly)" },
+            { name: "Zubenelgenubi", label: "Zubenelgenubi (Casual)" },
+            { name: "Vindemiatrix", label: "Vindemiatrix (Gentle)" },
+            { name: "Sadachbia", label: "Sadachbia (Lively)" },
+            { name: "Sadaltager", label: "Sadaltager (Knowledgeable)" },
+            { name: "Sulafat", label: "Sulafat (Warm)" }
+        ];
+
+        /**
+         * Displays a message to the user in the message box.
+         * @param {string} message - The message to display.
+         * @param {boolean} isError - True for an error (red), false for info (green).
+         */
+        function showMessage(message, isError, targetMessageBox = messageBox) {
+            targetMessageBox.textContent = message;
+            targetMessageBox.classList.remove('error', 'info');
+            targetMessageBox.classList.add(isError ? 'error' : 'info', 'show');
+        }
+
+        /**
+         * Hides the message box.
+         */
+        function hideMessage(targetMessageBox = messageBox) {
+            targetMessageBox.classList.remove('show');
+        }
+
+        /**
+         * Sets the loading state of the application, updating button text and spinner visibility.
+         * @param {boolean} isLoading - True to show loading state, false to hide.
+         */
+        function setLoading(isLoading) {
+            if (isLoading) {
+                buttonText.textContent = 'Thinking...';
+                loadingSpinner.classList.remove('hidden');
+                recordButton.disabled = true;
+                languageSelect.disabled = true;
+                voiceSelect.disabled = true;
+                recordButton.classList.remove('listening-hotword', 'speaking-active');
+                recordButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+            } else {
+                buttonText.textContent = 'Start Listening for Hotword';
+                loadingSpinner.classList.add('hidden');
+                recordButton.disabled = false;
+                languageSelect.disabled = false;
+                voiceSelect.disabled = false;
+                recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)';
+            }
+        }
+
+        /**
+         * Stops all active speech recognition instances to prevent conflicts.
+         * Sets `isSwitchingRecognition` to true to prevent unwanted restarts from `onend` events.
+         */
+        function stopAllRecognitions() {
+            isSwitchingRecognition = true;
+            if (recognition) {
+                recognition.stop();
+            }
+            if (hotwordRecognition) {
+                hotwordRecognition.stop();
+            }
+            if (stopSpeakingRecognition) {
+                stopSpeakingRecognition.stop();
+            }
+            // Reset flag after a slightly longer delay to allow 'aborted' events to fire and be handled.
+            setTimeout(() => {
+                isSwitchingRecognition = false;
+            }, 1000);
+        }
+        
+        /**
+         * Retries a fetch request with exponential backoff.
+         * @param {string} url - The URL to fetch.
+         * @param {object} options - The fetch options.
+         * @param {number} maxRetries - Maximum number of retries.
+         * @returns {Promise<Response>} The response from the successful fetch.
+         */
+        async function fetchWithRetry(url, options, maxRetries = 5) {
+            let retries = 0;
+            let delay = 1000; // Initial delay of 1 second
+            while (retries < maxRetries) {
+                try {
+                    const response = await fetch(url, options);
+                    // If response is successful or a non-retryable client error, return it
+                    if (response.ok || response.status < 500 && response.status !== 429) {
+                        return response;
+                    }
+                    // For server errors or rate limits, retry
+                    console.warn(`Fetch failed with status ${response.status}. Retrying in ${delay / 1000}s...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                    retries++;
+                } catch (error) {
+                    console.error(`Fetch failed with error: ${error.message}. Retrying in ${delay / 1000}s...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                    retries++;
+                }
+            }
+            throw new Error(`Failed to fetch from ${url} after ${maxRetries} retries.`);
+        }
+
+        /**
+         * Initializes and starts the main speech recognition for user queries.
+         * This is called after the "Jarvis" hotword is detected.
+         */
+        function initSpeechRecognition() {
+            console.log("Starting main recognition session.");
+            stopAllRecognitions();
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = false; // Capture a single phrase
+            recognition.interimResults = false; // Only return final results
+            recognition.lang = languageSelect.value; // Set the language
+            recognition.maxAlternatives = 5; // Return multiple alternatives for more accuracy
+
+            recognition.onstart = () => {
+                isRecording = true;
+                isHotwordListening = false;
+                buttonText.textContent = 'Speak Now...';
+                recordButton.classList.add('bg-red-500', 'hover:bg-red-600');
+                recordButton.style.backgroundImage = 'none';
+                recordButton.classList.remove('listening-hotword');
+                hideMessage();
+                userInputDiv.textContent = '';
+                assistantOutputDiv.textContent = '';
+                console.log('Main recognition started.');
+            };
+
+            recognition.onresult = async (event) => {
+                const transcript = event.results[0][0].transcript;
+                userInputDiv.textContent = `You: "${transcript}"`;
+                console.log(`Transcript: "${transcript}"`);
+
+                setLoading(true);
+                await getLLMResponse(transcript, languageSelect.value);
+            };
+
+            recognition.onerror = (event) => {
+                isRecording = false;
+                if (event.error === 'aborted' && isSwitchingRecognition) {
+                    console.log('Main recognition: Clean abort (intentional switch).');
+                } else if (event.error === 'not-allowed') {
+                    showMessage("Microphone access denied. Please allow microphone access in your browser settings.", true);
+                    console.error('Main recognition error: not-allowed');
+                } else if (event.error === 'no-speech') {
+                    showMessage("No speech detected. Please try again.", false);
+                    console.warn('Main recognition error: no-speech');
+                } else if (event.error === 'network') {
+                    // Explicitly handle network error for user feedback
+                    showMessage("Speech recognition service is unavailable due to a network error. Attempting to restart listener...", true);
+                    console.error('Main recognition error: network');
+                    // Immediately try to go back to hotword listening on network error
+                    setTimeout(() => initHotwordRecognition(), 1000);
+                } else {
+                    showMessage(`Speech recognition error: ${event.error}`, true);
+                    console.error('Main recognition error:', event.error);
+                }
+                setLoading(false);
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                recordButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+                recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)';
+                console.log('Main recognition ended.');
+                // Always try to go back to hotword listening unless intentionally stopped or speaking
+                if (!isSwitchingRecognition && !isSpeaking) {
+                    showMessage("Preparing to listen for hotword again...", false);
+                    setTimeout(() => initHotwordRecognition(), 1000);
+                }
+            };
+
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error("Error starting main recognition:", e);
+                showMessage("Could not start main recognition. Please ensure microphone is available and permissions are granted.", true);
+                setTimeout(() => initHotwordRecognition(), 1000);
+            }
+        }
+
+        /**
+         * Initializes and starts the hotword detection for "Jarvis".
+         */
+        function initHotwordRecognition() {
+            console.log("Starting hotword recognition session.");
+            stopAllRecognitions();
+            isHotwordListening = true; // Set state immediately
+
+            hotwordRecognition = new SpeechRecognition();
+            hotwordRecognition.continuous = true;
+            hotwordRecognition.interimResults = false;
+            hotwordRecognition.lang = languageSelect.value;
+            hotwordRecognition.maxAlternatives = 5;
+
+            hotwordRecognition.onstart = () => {
+                buttonText.textContent = "Listening for 'Jarvis'...";
+                recordButton.classList.add('listening-hotword');
+                recordButton.classList.remove('speaking-active');
+                recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)';
+                hideMessage();
+                console.log('Hotword recognition started.');
+            };
+
+            hotwordRecognition.onresult = async (event) => {
+                const lastResult = event.results[event.results.length - 1];
+                for (let i = 0; i < lastResult.length; i++) {
+                    const alternative = lastResult[i].transcript.toLowerCase();
+                    if (alternative.includes('jarvis')) {
+                        console.log("Hotword 'Jarvis' detected!");
+                        stopAllRecognitions();
+                        showMessage("Hotword detected! How can I help you?", false);
+                        await speakText("How can I help you?", languageSelect.value, initSpeechRecognition);
+                        return; // Exit after successful detection
+                    }
+                }
+            };
+
+            hotwordRecognition.onerror = (event) => {
+                isHotwordListening = false;
+                // The 'aborted' error is expected when another recognition session starts.
+                if (event.error === 'aborted') {
+                    console.log('Hotword recognition: Clean abort (intentional switch).');
+                    return;
+                }
+                if (event.error === 'no-speech') {
+                    console.info("Hotword listener: No speech detected, but listener is continuous.");
+                } else if (event.error === 'not-allowed') {
+                    showMessage("Microphone access denied. Please click the button to try again, or check your browser's site settings to enable the microphone.", true);
+                    console.error('Hotword recognition error: not-allowed');
+                    return; 
+                } else if (event.error === 'audio-capture') {
+                    showMessage("Could not access the microphone. Please check your system's microphone permissions and ensure no other applications are using it.", true);
+                    console.error('Hotword recognition error: audio-capture');
+                    return; 
+                } else if (event.error === 'network') {
+                    showMessage("Network connection lost. Attempting to restart listener...", true);
+                    console.error('Hotword recognition error: network');
+                    // Explicitly try to restart on network error
+                    setTimeout(() => initHotwordRecognition(), 1000);
+                } else {
+                    showMessage(`Hotword recognition error: ${event.error}`, true);
+                    console.error('Hotword recognition error:', event.error);
+                    // On any other error, restart the listener
+                    setTimeout(() => initHotwordRecognition(), 1000);
+                }
+            };
+
+            hotwordRecognition.onend = () => {
+                isHotwordListening = false;
+                console.log("Hotword recognition ended. State transition handled by app logic.");
+                // If it wasn't an intentional stop, restart it after a delay.
+                if (!isSwitchingRecognition && !isSpeaking) {
+                    showMessage("Listener stopped unexpectedly. Restarting...", false);
+                    console.log("Hotword recognition ended unexpectedly, restarting...");
+                    setTimeout(() => {
+                        initHotwordRecognition();
+                    }, 1000); 
+                }
+            };
+
+            try {
+                hotwordRecognition.start();
+            } catch (e) {
+                console.error("Error starting hotword recognition:", e);
+                showMessage("Could not start hotword listener. Please ensure microphone is available and permissions are granted.", true);
+                isHotwordListening = false;
+            }
+        }
+
+        /**
+         * Initializes and starts the "stop talking" hotword detection.
+         * This listener is only active when the assistant is speaking.
+         */
+        function initStopSpeakingHotwordListener() {
+            console.log("Starting 'stop speaking' hotword listener.");
+            stopAllRecognitions(); // Stop all others first
+            
+            stopSpeakingRecognition = new SpeechRecognition();
+            stopSpeakingRecognition.continuous = true;
+            stopSpeakingRecognition.interimResults = false;
+            stopSpeakingRecognition.lang = languageSelect.value;
+            stopSpeakingRecognition.maxAlternatives = 5;
+
+            stopSpeakingRecognition.onstart = () => {
+                console.log("Stop speaking hotword listener started.");
+            };
+
+            stopSpeakingRecognition.onresult = (event) => {
+                const lastResult = event.results[event.results.length - 1];
+                for (let i = 0; i < lastResult.length; i++) {
+                    const alternative = lastResult[i].transcript.toLowerCase();
+                    if (alternative.includes('stop talking') || alternative.includes('stop speaking')) {
+                        if (currentAudio) {
+                            currentAudio.pause();
+                            currentAudio = null;
+                        }
+                        stopSpeakingRecognition.stop();
+                        isSpeaking = false;
+                        showMessage("Assistant stopped speaking.", false);
+                        console.log("Assistant stopped speaking due to 'stop talking' hotword.");
+                        // The onend handler will take care of restarting the hotword listener
+                        return;
+                    }
+                }
+            };
+            
+            stopSpeakingRecognition.onerror = (event) => {
+                // The 'aborted' error is expected when another recognition session starts.
+                if (event.error === 'aborted') {
+                    return;
+                }
+                if (event.error !== 'no-speech') {
+                    console.error('Stop recognition error:', event.error);
+                }
+            };
+
+            stopSpeakingRecognition.onend = () => {
+                console.log("Stop speaking recognition ended.");
+                if (!isSwitchingRecognition && !isSpeaking) {
+                    showMessage("Preparing to listen for hotword again...", false);
+                    setTimeout(() => initHotwordRecognition(), 1000);
+                }
+            };
+
+            try {
+                stopSpeakingRecognition.start();
+            } catch (e) {
+                console.error("Error starting stop speaking recognition:", e);
+            }
+        }
+
+        /**
+         * Populates the voice selection dropdown with prebuilt voices from the Gemini TTS API.
+         */
+        function populateVoiceList() {
+            voiceSelect.innerHTML = ''; 
+            prebuiltVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.textContent = voice.label;
+                option.value = voice.name; 
+                voiceSelect.appendChild(option);
+            });
+            if (prebuiltVoices.length > 0) {
+                voiceSelect.disabled = false;
+            } else {
+                voiceSelect.disabled = true;
+                showMessage("No voices available for the TTS API.", true);
+            }
+        }
+
+        /**
+         * Converts a Base64 string to an ArrayBuffer.
+         * @param {string} base64 - The Base64 string.
+         * @returns {ArrayBuffer}
+         */
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        /**
+         * Converts PCM audio data to a WAV Blob.
+         * @param {Int16Array} pcmData - The PCM data.
+         * @param {number} sampleRate - The sample rate.
+         * @returns {Blob}
+         */
+        function pcmToWav(pcmData, sampleRate) {
+            const dataLength = pcmData.length * 2;
+            const buffer = new ArrayBuffer(44 + dataLength);
+            const view = new DataView(buffer);
+
+            // RIFF identifier
+            writeString(view, 0, 'RIFF');
+            // file length
+            view.setUint32(4, 36 + dataLength, true);
+            // RIFF type
+            writeString(view, 8, 'WAVE');
+            // format chunk identifier
+            writeString(view, 12, 'fmt ');
+            // format chunk length
+            view.setUint32(16, 16, true);
+            // sample format (raw)
+            view.setUint16(20, 1, true);
+            // channel count
+            view.setUint16(22, 1, true);
+            // sample rate
+            view.setUint32(24, sampleRate, true);
+            // byte rate (sample rate * block align)
+            view.setUint32(28, sampleRate * 2, true);
+            // block align (channels * bytes per sample)
+            view.setUint16(32, 2, true);
+            // bits per sample
+            view.setUint16(34, 16, true);
+            // data chunk identifier
+            writeString(view, 36, 'data');
+            // data chunk length
+            view.setUint32(40, dataLength, true);
+
+            // Write the PCM data
+            const pcmView = new Int16Array(buffer, 44);
+            pcmView.set(pcmData);
+
+            return new Blob([view], { type: 'audio/wav' });
+
+            function writeString(view, offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            }
+        }
+
+        /**
+         * Calls the Gemini API to get a response for the given prompt.
+         * @param {string} prompt - The user's input prompt.
+         * @param {string} targetLang - The language the assistant should respond in.
+         */
+        async function getLLMResponse(prompt, targetLang) {
+            let chatHistory = [];
+            // Refine the prompt to be more direct and concise and to avoid markdown.
+            // This is a key change to improve compatibility with the TTS model.
+            const instruction = `Respond to the following query concisely and conversationally in the language code provided: ${targetLang}. Use only plain text, without any markdown formatting or special characters. The user query is: "${prompt}".`;
+            
+            chatHistory.push({ role: "user", parts: [{ text: instruction }] });
+            const payload = { contents: chatHistory };
+            // The apiKey variable is automatically populated by the environment.
+            // Do not provide a manual API key here.
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API error: ${response.status} - ${errorData.error.message || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    let text = result.candidates[0].content.parts[0].text;
+                    
+                    if (text.trim() === '') {
+                        assistantOutputDiv.textContent = `Assistant: "No response."`;
+                        showMessage("Assistant had no response.", false);
+                        setTimeout(() => initHotwordRecognition(), 1000);
+                        return;
+                    }
+
+                    assistantOutputDiv.textContent = `Assistant: "${text}"`;
+                    // After speaking the LLM response, restart hotword recognition
+                    await speakText(text, targetLang, initHotwordRecognition);
+                } else {
+                    showMessage("No valid response from the assistant. Please try again.", true);
+                    console.error("Unexpected LLM response structure:", result);
+                    setTimeout(() => initHotwordRecognition(), 1000);
+                }
+            } catch (error) {
+                showMessage(`Failed to get response from assistant: ${error.message}`, true);
+                console.error("Error calling Gemini API:", error);
+                setTimeout(() => initHotwordRecognition(), 1000);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        /**
+         * Speaks the given text using the Gemini TTS API, then calls a callback function.
+         * @param {string} text - The text to speak.
+         * @param {string} lang - The language code for speech synthesis (e.g., 'en-US').
+         * @param {function} onEndedCallback - The function to call when speech is complete.
+         * @returns {Promise<void>} A promise that resolves when speech is complete.
+         */
+        async function speakText(text, lang, onEndedCallback) {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            
+            isSpeaking = true;
+            stopAllRecognitions();
+            initStopSpeakingHotwordListener();
+            recordButton.classList.add('speaking-active');
+            recordButton.classList.remove('listening-hotword');
+
+            const selectedVoiceName = voiceSelect.value;
+            
+            console.log(`Sending text to TTS: "${text}"`);
+            
+            const payload = {
+                contents: [{ parts: [{ text: text }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: selectedVoiceName }
+                        }
+                    }
+                },
+                model: "gemini-2.5-flash-preview-tts"
+            };
+            
+            // The apiKey variable is automatically populated by the environment.
+            // Do not provide a manual API key here.
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            
+            try {
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`TTS API error: ${response.status} - ${errorData.error.message || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+
+                // Explicitly check for finishReason "OTHER" and log it as a potential API issue
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].finishReason === "OTHER") {
+                    console.warn("TTS API returned finishReason 'OTHER'. This may indicate the model couldn't generate audio for the provided text.");
+                }
+                
+                const part = result?.candidates?.[0]?.content?.parts?.[0];
+                const audioData = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType;
+
+                if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                    const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+                    const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 16000;
+                    const pcmData = base64ToArrayBuffer(audioData);
+                    const pcm16 = new Int16Array(pcmData);
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+                    
+                    currentAudio = new Audio(audioUrl);
+                    currentAudio.onended = () => {
+                        isSpeaking = false;
+                        if (stopSpeakingRecognition) {
+                            stopSpeakingRecognition.stop();
+                        }
+                        recordButton.classList.remove('speaking-active');
+                        URL.revokeObjectURL(audioUrl);
+                        if (onEndedCallback) {
+                            onEndedCallback();
+                        }
+                    };
+                    currentAudio.play();
+                } else {
+                    console.error("TTS response was missing or had invalid audio data. Full response:", result);
+                    showMessage(`Assistant couldn't generate a voice response for that query. Please try again or rephrase.`, true);
+                    
+                    // Clean up state and restart hotword recognition directly.
+                    isSpeaking = false;
+                    recordButton.classList.remove('speaking-active');
+                    if (stopSpeakingRecognition) {
+                        stopSpeakingRecognition.stop();
+                    }
+                    if (onEndedCallback) {
+                        onEndedCallback();
+                    }
+                }
+            } catch (e) {
+                console.error("Error calling TTS API or playing audio:", e);
+                showMessage(`There was a problem generating the voice response. Please check your internet connection or try again.`, true);
+                
+                // On failure, we must still clean up and call the callback to restart recognition.
+                isSpeaking = false;
+                recordButton.classList.remove('speaking-active');
+                if (stopSpeakingRecognition) {
+                    stopSpeakingRecognition.stop();
+                }
+                if (onEndedCallback) {
+                    setTimeout(() => onEndedCallback(), 1000); // Add a small delay to avoid rapid retries
+                }
+            }
+        }
+        
+        /**
+         * Proactively requests microphone permission and initializes the app.
+         */
+        async function checkMicrophonePermissionAndInit() {
+            try {
+                // Request microphone access
+                await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log("Microphone access granted.");
+                showMessage("Microphone access granted. Listening for hotword...", false);
+                // After getting permission, initialize the app
+                initHotwordRecognition();
+            } catch (error) {
+                if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+                    showMessage("Microphone access was denied. To use the voice assistant, please enable the microphone in your browser's site settings.", true);
+                    recordButton.disabled = true;
+                } else {
+                    showMessage(`An error occurred while accessing the microphone: ${error.message}`, true);
+                    recordButton.disabled = true;
+                }
+                console.error("Microphone access error:", error);
+            }
+        }
+
+        // --- Login Logic ---
+        function showLoginScreen() {
+            loginSection.classList.remove('hidden');
+            appSection.classList.add('hidden');
+            // Stop any active listeners when logging out
+            stopAllRecognitions();
+            isHotwordListening = false;
+            isRecording = false;
+            isSpeaking = false;
+            hideMessage(loginMessageBox);
+        }
+
+        function showAppScreen() {
+            loginSection.classList.add('hidden');
+            appSection.classList.remove('hidden');
+            hideMessage(loginMessageBox);
+            // Restart the voice assistant logic
+            populateVoiceList();
+            checkMicrophonePermissionAndInit();
+        }
+
+        loginButton.addEventListener('click', () => {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            // Simple, insecure client-side check
+            if (username.toUpperCase() === 'AMER' && password === 'ROZA') {
+                showAppScreen();
+            } else {
+                showMessage("Invalid username or password.", true, loginMessageBox);
+            }
+        });
+
+        logoutButton.addEventListener('click', () => {
+            showLoginScreen();
+            showMessage("You have been logged out.", false);
+        });
+
+        // Event listener for the main button
+        recordButton.addEventListener('click', () => {
+            // If the button is clicked, and we're not already listening, start the hotword recognition.
+            // This allows the user to manually retry if there's an error.
+            if (!isHotwordListening && !isRecording) {
+                initHotwordRecognition();
+            }
+        });
+
+        // Initialize the app with the login screen when the page loads
+        window.onload = () => {
+            showLoginScreen();
+        };
+
+        // If the user changes the language, update the voices and restart the hotword listener
+        languageSelect.addEventListener('change', () => {
+            if (!loginSection.classList.contains('hidden')) {
+                // If login screen is visible, do nothing
+                return;
+            }
+            // Stopping all recognitions is important before a language change
+            // to ensure the new recognition object is created with the new language.
+            stopAllRecognitions();
+            showMessage("Language changed. Preparing to listen again...", false);
+            setTimeout(() => initHotwordRecognition(), 1000);
+        });
+    </script>
+</body>
+</html>
