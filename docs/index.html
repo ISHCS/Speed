@@ -153,7 +153,7 @@
     <div class="container">
         <!-- Voice Assistant App Section (Now visible by default) -->
         <div id="app-section">
-            <h1 class="text-3xl font-bold text-gray-800">AI Assistant by Raji Technology</h1>
+            <h1 class="text-3xl font-bold text-gray-800"> AI Assistant by Raji Technology +251913395143</h1>
 
             <div class="select-container">
                 <label for="language-select" class="text-gray-700 font-medium">Select Input Language:</label>
@@ -445,7 +445,7 @@
                 model: "gemini-2.5-flash-preview-tts"
             };
 
-            const apiKey = "";
+            const apiKey = "AIzaSyBh2_bCn8JlLrmn3G3PxcHjuONZ7FX4PBA";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
             
             const response = await fetchWithRetry(apiUrl, {
@@ -541,7 +541,7 @@
          */
         async function getLLMResponse(prompt, langCode) {
             setState('THINKING');
-            const apiKey = "";
+            const apiKey = "AIzaSyBh2_bCn8JlLrmn3G3PxcHjuONZ7FX4PBA";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
             // Changed prompt to encourage more conversational, TTS-friendly responses.
