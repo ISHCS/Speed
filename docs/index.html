@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice AI Assistant by Raji Technology</title>
+    <title>Voice AI Assistant</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -139,21 +139,20 @@
             animation: pulse 2s infinite;
         }
         .speaking-active {
-            background-image: linear-gradient(to right, #10b981, #059669); /* Green for speaking */
-            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+            color: #10b981; /* Green for speaking */
+            font-weight: 700;
         }
         .recording-active {
-            background-image: none;
-            background-color: #ef4444; /* Red color for recording */
-            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+            color: #ef4444; /* Red color for recording */
+            font-weight: 700;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Voice Assistant App Section (Now visible by default) -->
+        <!-- Voice Assistant App Section -->
         <div id="app-section">
-            <h1 class="text-3xl font-bold text-gray-800"> AI Assistant by Raji Technology +251913395143</h1>
+            <h1 class="text-3xl font-bold text-gray-800"> AI Assistant RAJI TECHNOLGY +251913395143</h1>
 
             <div class="select-container">
                 <label for="language-select" class="text-gray-700 font-medium">Select Input Language:</label>
@@ -178,6 +177,12 @@
                 <label for="voice-select" class="text-gray-700 font-medium">Select Speaker Voice:</label>
                 <select id="voice-select" class="w-full"></select>
             </div>
+            
+            <!-- Status message area, replacing the button -->
+            <div id="status-message" class="text-center text-gray-600 font-medium flex items-center justify-center gap-2">
+                <span>Loading...</span>
+                <div id="loading-spinner" class="loading-spinner"></div>
+            </div>
 
             <div class="flex flex-col gap-2">
                 <label for="user-input" class="text-left text-gray-700 font-medium">Your Input:</label>
@@ -189,18 +194,13 @@
                 <div id="assistant-output" class="text-area" aria-live="polite"></div>
             </div>
 
-            <button id="record-button" class="button-primary">
-                <span id="button-text">Listening for "Jarvis"...</span>
-                <div id="loading-spinner" class="loading-spinner hidden"></div>
-            </button>
         </div>
         <div id="message-box" class="message-box" aria-live="assertive"></div>
     </div>
 
     <script type="module">
         // Get references to DOM elements
-        const recordButton = document.getElementById('record-button');
-        const buttonText = document.getElementById('button-text');
+        const statusMessageDiv = document.getElementById('status-message');
         const loadingSpinner = document.getElementById('loading-spinner');
         const userInputDiv = document.getElementById('user-input');
         const assistantOutputDiv = document.getElementById('assistant-output');
@@ -212,14 +212,14 @@
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
             showMessage("Your browser does not support Speech Recognition. Please use a modern browser like Chrome or Edge.", true);
-            recordButton.disabled = true;
+            statusMessageDiv.textContent = 'Browser Not Supported';
         }
 
         let recognition; // The main recognition instance for user queries
         let hotwordRecognition; // The separate instance for detecting the hotword
         let currentAudio; // Reference to the currently playing audio element
         
-        let state = 'IDLE'; // 'IDLE', 'HOTWORD_LISTENING', 'MAIN_LISTENING', 'THINKING', 'SPEAKING'
+        let state = 'LOADING'; // 'LOADING', 'HOTWORD_LISTENING', 'MAIN_LISTENING', 'THINKING', 'SPEAKING'
         
         // Prebuilt voices for gemini-2.5-flash-preview-tts
         const prebuiltVoices = [
@@ -259,38 +259,35 @@
          * Updates the UI based on the current state.
          */
         function updateUI() {
-            recordButton.classList.remove('hotword-listening', 'recording-active', 'speaking-active');
-            recordButton.disabled = false;
+            statusMessageDiv.classList.remove('hotword-listening', 'recording-active', 'speaking-active');
             loadingSpinner.classList.add('hidden');
             languageSelect.disabled = false;
             voiceSelect.disabled = false;
-            recordButton.style.backgroundImage = 'linear-gradient(to right, #6366f1, #8b5cf6)';
 
             switch(state) {
-                case 'IDLE':
-                    buttonText.textContent = 'Start Listening';
+                case 'LOADING':
+                    statusMessageDiv.textContent = 'Loading...';
+                    loadingSpinner.classList.remove('hidden');
+                    languageSelect.disabled = true;
+                    voiceSelect.disabled = true;
                     break;
                 case 'HOTWORD_LISTENING':
-                    buttonText.textContent = 'Listening for "Jarvis"...';
-                    recordButton.classList.add('hotword-listening');
+                    statusMessageDiv.textContent = 'Listening for "Jarvis"...';
+                    statusMessageDiv.classList.add('hotword-listening');
                     break;
                 case 'MAIN_LISTENING':
-                    buttonText.textContent = 'Listening...';
-                    recordButton.classList.add('recording-active');
-                    recordButton.style.backgroundImage = 'none';
+                    statusMessageDiv.textContent = 'Listening...';
+                    statusMessageDiv.classList.add('recording-active');
                     break;
                 case 'THINKING':
-                    buttonText.textContent = 'Thinking...';
+                    statusMessageDiv.textContent = 'Thinking...';
                     loadingSpinner.classList.remove('hidden');
-                    recordButton.disabled = true;
                     languageSelect.disabled = true;
                     voiceSelect.disabled = true;
                     break;
                 case 'SPEAKING':
-                    buttonText.textContent = "Assistant Speaking...";
-                    recordButton.classList.add('speaking-active');
-                    recordButton.style.backgroundImage = 'none';
-                    recordButton.disabled = true;
+                    statusMessageDiv.textContent = "Assistant Speaking...";
+                    statusMessageDiv.classList.add('speaking-active');
                     break;
             }
         }
@@ -400,11 +397,8 @@
             view.setUint16(20, 1, true);
             // channel count
             view.setUint16(22, 1, true);
-            // Fix: Corrected the offset for sample rate
             view.setUint32(24, sampleRate, true);
-            // Fix: Corrected the offset for byte rate (sampleRate * channels * bytesPerSample)
             view.setUint32(28, sampleRate * 2, true);
-            // block align (channels * bytes per sample)
             view.setUint16(32, 2, true);
             // bits per sample
             view.setUint16(34, 16, true);
@@ -445,7 +439,8 @@
                 model: "gemini-2.5-flash-preview-tts"
             };
 
-            const apiKey = "AIzaSyBh2_bCn8JlLrmn3G3PxcHjuONZ7FX4PBA";
+            // The API key is now an empty string, which the platform will automatically populate.
+            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
             
             const response = await fetchWithRetry(apiUrl, {
@@ -529,7 +524,7 @@
                 if (onAudioEndCallback) {
                     onAudioEndCallback();
                 }
-                // IMPORTANT FIX: Re-throw the error so that the caller can handle it gracefully.
+                // Re-throw the error so that the caller can handle it gracefully.
                 throw lastError || new Error("Failed to speak text after multiple retries.");
             }
         }
@@ -541,59 +536,85 @@
          */
         async function getLLMResponse(prompt, langCode) {
             setState('THINKING');
-            const apiKey = "AIzaSyBh2_bCn8JlLrmn3G3PxcHjuONZ7FX4PBA";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
-            // Changed prompt to encourage more conversational, TTS-friendly responses.
-            const fullPrompt = `You are a helpful and conversational AI assistant. Respond in a complete sentence in the language of the user's query, which is ${langCode}. The user said: "${prompt}"`;
-
-            const payload = {
-                contents: [{ role: "user", parts: [{ text: fullPrompt }] }]
-            };
-
+            // Speak "I'm thinking" first, then proceed with the LLM call.
             try {
-                const response = await fetchWithRetry(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`LLM API error: ${response.status} ${response.statusText}`);
-                }
-
-                const result = await response.json();
-                const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                if (text && text.trim().length > 0) {
-                    // FIX: Display the text response immediately for better responsiveness.
-                    assistantOutputDiv.textContent = `Assistant: "${text}"`;
+                await speakTextWithRetry("I'm thinking.", async () => {
+                    // This callback runs after "I'm thinking" has finished playing.
                     
-                    try {
-                        await speakTextWithRetry(text, () => {
-                            setState('HOTWORD_LISTENING'); // Resume hotword listening
+                    // The text that will be used for the response
+                    let responseText;
+
+                    const lowerPrompt = prompt.toLowerCase();
+                    // Define keywords for creator-related queries
+                    const creatorKeywords = ["who created you", "who made you", "your creator", "who built you"];
+                    // Check if the user's prompt is about the creator
+                    const isCreatorQuery = creatorKeywords.some(keyword => lowerPrompt.includes(keyword));
+
+                    if (isCreatorQuery) {
+                        // Hardcoded response for creator queries
+                        responseText = "I am created by Raji Technology Innovator Amer";
+                    } else {
+                        // Normal LLM API call
+                        const apiKey = "";
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                        const fullPrompt = `You are a helpful and conversational AI assistant. Respond in a complete sentence in the language of the user's query, which is ${langCode}. The user said: "${prompt}"`;
+
+                        const payload = {
+                            contents: [{ role: "user", parts: [{ text: fullPrompt }] }]
+                        };
+
+                        try {
+                            const response = await fetchWithRetry(apiUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`LLM API error: ${response.status} ${response.statusText}`);
+                            }
+
+                            const result = await response.json();
+                            responseText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                        } catch (error) {
+                            console.error('Error during LLM call:', error);
+                            showMessage(`Assistant failed to generate a response: ${error.message}`, true);
+                            setState('HOTWORD_LISTENING');
                             startHotwordListening();
-                        });
-                    } catch (ttsError) {
-                        console.error('TTS failed, but the text was generated successfully. Displaying text instead.', ttsError);
-                        // Display the text and resume hotword listening without speaking.
-                        assistantOutputDiv.textContent = `Assistant (text only): "${text}"`;
-                        showMessage(`TTS failed to generate audio for this response. Displaying text instead.`, true);
+                            return; // Stop execution here
+                        }
+                    }
+
+                    if (responseText && responseText.trim().length > 0) {
+                        assistantOutputDiv.textContent = `Assistant: "${responseText}"`;
+                        
+                        try {
+                            await speakTextWithRetry(responseText, () => {
+                                setState('HOTWORD_LISTENING');
+                                startHotwordListening();
+                            });
+                        } catch (ttsError) {
+                            console.error('TTS failed, but the text was generated successfully. Displaying text instead.', ttsError);
+                            assistantOutputDiv.textContent = `Assistant (text only): "${responseText}"`;
+                            showMessage(`TTS failed to generate audio for this response. Displaying text instead.`, true);
+                            setState('HOTWORD_LISTENING');
+                            startHotwordListening();
+                        }
+                    } else {
+                        console.warn("LLM returned a very short or empty response, skipping TTS.");
+                        assistantOutputDiv.textContent = `Assistant: "${responseText}"`;
+                        showMessage("Assistant provided a short response. Hotword listening will resume.", false);
                         setState('HOTWORD_LISTENING');
                         startHotwordListening();
                     }
-                } else {
-                    console.warn("LLM returned a very short or empty response, skipping TTS.");
-                    assistantOutputDiv.textContent = `Assistant: "${text}"`;
-                    showMessage("Assistant provided a short response. Hotword listening will resume.", false);
-                    setState('HOTWORD_LISTENING');
-                    startHotwordListening();
-                }
+                });
             } catch (error) {
-                console.error('Error during LLM call:', error);
-                showMessage(`Assistant failed to generate a response: ${error.message}`, true);
+                console.error('Error speaking "I\'m thinking.":', error);
+                showMessage('Assistant failed to say "I\'m thinking."', true);
                 setState('HOTWORD_LISTENING');
-                startHotwordListening(); // Resume hotword listening
+                startHotwordListening();
             }
         }
 
@@ -611,7 +632,7 @@
             recognition.continuous = false; // Capture a single phrase
             recognition.interimResults = false; // Only return final results
             recognition.lang = languageSelect.value;
-            recognition.maxAlternatives = 5;
+            recognition.maxAlternatives = 10; // Increased alternatives for better distant listening
 
             recognition.onstart = () => {
                 userInputDiv.textContent = '';
@@ -677,6 +698,7 @@
             hotwordRecognition.continuous = true; // Listen continuously
             hotwordRecognition.interimResults = false;
             hotwordRecognition.lang = languageSelect.value;
+            hotwordRecognition.maxAlternatives = 10; // Increased alternatives for better distant listening
 
             hotwordRecognition.onresult = (event) => {
                 const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
@@ -715,61 +737,33 @@
             } catch (e) {
                 console.error("Error starting hotword recognition:", e);
                 showMessage("Could not start microphone. Please ensure it's available and permissions are granted.", true);
-                setState('IDLE');
+                // In case of an error, we should stop and not try to restart immediately
+                // to avoid an infinite loop of failures.
+                setState('LOADING');
             }
         }
 
         /**
-         * Manages the button click action to toggle the listening state.
+         * Initializes the voice select dropdown with available prebuilt voices.
          */
-        function toggleListening() {
-            switch (state) {
-                case 'IDLE':
-                    startHotwordListening();
-                    break;
-                case 'HOTWORD_LISTENING':
-                    if (hotwordRecognition) hotwordRecognition.stop();
-                    startListening();
-                    break;
-                case 'MAIN_LISTENING':
-                    if (recognition) recognition.stop();
-                    setState('IDLE');
-                    break;
-                case 'SPEAKING':
-                case 'THINKING':
-                    // Do nothing, button is disabled in these states.
-                    break;
-            }
-        }
-
-
-        /**
-         * Populates the voice selection dropdown with prebuilt voices from the Gemini TTS API.
-         */
-        function populateVoiceList() {
+        function populateVoices() {
             voiceSelect.innerHTML = '';
             prebuiltVoices.forEach(voice => {
                 const option = document.createElement('option');
-                option.textContent = voice.label;
                 option.value = voice.name;
+                option.textContent = voice.label;
                 voiceSelect.appendChild(option);
             });
-            if (prebuiltVoices.length > 0) {
-                voiceSelect.disabled = false;
-            } else {
-                voiceSelect.disabled = true;
-                showMessage("No voices available for the TTS API.", true);
-            }
+            // Set a default voice if needed
+            voiceSelect.value = 'Kore'; 
         }
-        
-        // Event listener for the main button.
-        recordButton.addEventListener('click', toggleListening);
 
-        // Initial setup on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            populateVoiceList();
-            startHotwordListening(); // Start listening for the hotword on page load
-        });
+        // Initialize the app on window load
+        window.onload = () => {
+            populateVoices();
+            // Start the hotword listener immediately on load.
+            startHotwordListening();
+        };
     </script>
 </body>
 </html>
