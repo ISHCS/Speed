@@ -68,6 +68,14 @@
         
         #conversation-container::-webkit-scrollbar { width: 4px; }
         #conversation-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        
+        .message-bubble {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -77,7 +85,7 @@
             <p class="text-slate-400 text-sm">Raji AI Assistant</p>
         </header>
 
-        <div id="conversation-container" class="w-full h-64 overflow-y-auto bg-slate-900/50 rounded-xl p-4 mb-6 flex flex-col gap-3">
+        <div id="conversation-container" class="w-full h-80 overflow-y-auto bg-slate-900/50 rounded-xl p-4 mb-6 flex flex-col gap-3">
             <div class="text-slate-500 text-center text-xs italic">
                 Ready. Say "Jarvis" or click the mic to begin.
             </div>
@@ -96,29 +104,140 @@
     </div>
 
     <script>
-        const apiKey = ""; // Environment provided
+        // API Configuration
+        const apiKey = ""; // Automatically handled by environment
+        const modelName = "gemini-2.5-flash-preview-09-2025";
+        const ttsModelName = "gemini-2.5-flash-preview-tts";
+
+        // DOM Elements
         const micButton = document.getElementById('mic-button');
         const micWrapper = document.getElementById('mic-wrapper');
         const conversationContainer = document.getElementById('conversation-container');
         const statusMessage = document.getElementById('status-message');
         
+        // State
         let recognition;
         let isActivated = false;
         let isProcessing = false;
-        let isRecognitionActive = false; // Track the actual state of the recognition engine
+        let isRecognitionActive = false;
+        let audioContext;
 
-        // Safely start recognition
-        function safeStartRecognition() {
-            if (recognition && !isRecognitionActive && !isProcessing && !window.speechSynthesis.speaking) {
+        // --- Core Functions ---
+
+        async function fetchWithRetry(url, options, retries = 5) {
+            let delay = 1000;
+            for (let i = 0; i < retries; i++) {
                 try {
-                    recognition.start();
+                    const response = await fetch(url, options);
+                    if (response.ok) return await response.json();
+                    if (response.status === 429 || response.status >= 500) {
+                        await new Promise(r => setTimeout(r, delay));
+                        delay *= 2;
+                        continue;
+                    }
+                    throw new Error(`HTTP Error: ${response.status}`);
                 } catch (e) {
-                    console.warn("Recognition start failed:", e);
+                    if (i === retries - 1) throw e;
+                    await new Promise(r => setTimeout(r, delay));
+                    delay *= 2;
                 }
             }
         }
 
-        // Initialize Speech Recognition
+        async function processWithAI(userInput) {
+            isProcessing = true;
+            updateUI('processing', "Jarvas is thinking...");
+            
+            const systemPrompt = "You are Jarvas, a helpful AI assistant. Be concise, polite, and professional. Use natural language. If asked about your creator, you were created by Raji Technology innovator Amer Abdullah.";
+            
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+                const result = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: userInput }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] }
+                    })
+                });
+
+                const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "I apologize, I couldn't generate a response.";
+                addMessage('jarvas', aiResponse);
+                await speak(aiResponse);
+            } catch (error) {
+                console.error(error);
+                statusMessage.textContent = "Error: Connection failed.";
+                updateUI('idle', "Idle");
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        async function speak(text) {
+            updateUI('speaking', "Jarvas is speaking...");
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${ttsModelName}:generateContent?key=${apiKey}`;
+                const result = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Say in a professional, helpful male assistant voice: ${text}` }] }],
+                        generationConfig: {
+                            responseModalities: ["AUDIO"],
+                            speechConfig: {
+                                voiceConfig: {
+                                    prebuiltVoiceConfig: { voiceName: "Puck" }
+                                }
+                            }
+                        }
+                    })
+                });
+
+                const audioData = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                if (!audioData) throw new Error("No audio returned");
+
+                await playPCM(audioData);
+            } catch (e) {
+                console.error("TTS Failed:", e);
+                // Fallback to browser speech if Gemini TTS fails
+                const ut = new SpeechSynthesisUtterance(text);
+                ut.onend = () => restartRecognition();
+                window.speechSynthesis.speak(ut);
+            }
+        }
+
+        async function playPCM(base64Data) {
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+            
+            const binaryString = atob(base64Data);
+            const len = binaryString.length;
+            const bytes = new Int16Array(len / 2);
+            for (let i = 0; i < len; i += 2) {
+                bytes[i / 2] = (binaryString.charCodeAt(i + 1) << 8) | binaryString.charCodeAt(i);
+            }
+
+            const audioBuffer = audioContext.createBuffer(1, bytes.length, 24000);
+            const channelData = audioBuffer.getChannelData(0);
+            for (let i = 0; i < bytes.length; i++) {
+                channelData[i] = bytes[i] / 32768;
+            }
+
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+            source.onended = () => restartRecognition();
+            source.start();
+        }
+
+        function restartRecognition() {
+            updateUI('listening', "Listening...");
+            if (recognition && !isRecognitionActive) {
+                try { recognition.start(); } catch(e) {}
+            }
+        }
+
+        // --- Speech Recognition ---
+
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
@@ -126,9 +245,12 @@
             recognition.interimResults = false;
             recognition.lang = 'en-US';
 
-            recognition.onstart = () => {
-                isRecognitionActive = true;
-                updateUI('listening', isActivated ? "Listening for command..." : "Listening for 'Jarvis'...");
+            recognition.onstart = () => { isRecognitionActive = true; };
+            recognition.onend = () => { 
+                isRecognitionActive = false; 
+                if (!isProcessing && statusMessage.textContent !== "Jarvas is speaking...") {
+                    setTimeout(() => restartRecognition(), 300);
+                }
             };
 
             recognition.onresult = (event) => {
@@ -139,103 +261,25 @@
                     if (lower.includes('jarvis')) {
                         isActivated = true;
                         addMessage('user', transcript);
-                        handleResponse("Yes? How can I help you today?");
+                        processWithAI("Hello Jarvas");
                     }
                 } else if (!isProcessing) {
                     addMessage('user', transcript);
+                    recognition.stop();
                     processWithAI(transcript);
                 }
             };
-
-            recognition.onerror = (event) => {
-                if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                    console.error("Recognition error:", event.error);
-                    statusMessage.textContent = "Mic Error: " + event.error;
-                }
-            };
-
-            recognition.onend = () => {
-                isRecognitionActive = false;
-                // Only restart if we aren't busy with AI or TTS
-                if (!isProcessing && !window.speechSynthesis.speaking) {
-                    setTimeout(safeStartRecognition, 300);
-                }
-            };
         }
 
-        async function processWithAI(userInput) {
-            isProcessing = true;
-            updateUI('processing', "Jarvas is thinking...");
-            
-            if (recognition) {
-                recognition.stop();
-            }
-
-            const systemPrompt = "You are Jarvas, a helpful AI assistant. Be concise, polite, and professional. Use natural language. If asked about your creator, you were created by Raji Technology innovator Amer Abdullah.";
-            
-            const fetchWithRetry = async (url, options, retries = 5, backoff = 1000) => {
-                try {
-                    const res = await fetch(url, options);
-                    if (!res.ok) throw new Error(res.statusText);
-                    return await res.json();
-                } catch (err) {
-                    if (retries <= 0) throw err;
-                    await new Promise(resolve => setTimeout(resolve, backoff));
-                    return fetchWithRetry(url, options, retries - 1, backoff * 2);
-                }
-            };
-
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                const data = await fetchWithRetry(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: userInput }] }],
-                        systemInstruction: { parts: [{ text: systemPrompt }] }
-                    })
-                });
-
-                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't process that.";
-                handleResponse(aiResponse);
-            } catch (error) {
-                handleResponse("I am having trouble reaching my servers. Please check your connection.");
-            } finally {
-                isProcessing = false;
-                // Recognition will be restarted in speak() or on end of speech
-            }
-        }
-
-        function handleResponse(text) {
-            addMessage('jarvas', text);
-            speak(text);
-        }
-
-        function speak(text) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            
-            const voices = window.speechSynthesis.getVoices();
-            utterance.voice = voices.find(v => v.name.includes("Male") || v.name.includes("UK")) || voices[0];
-            utterance.pitch = 0.9;
-            utterance.rate = 1.0;
-
-            utterance.onstart = () => {
-                if (recognition) recognition.stop();
-                updateUI('speaking', "Jarvas is speaking...");
-            };
-
-            utterance.onend = () => {
-                updateUI('listening', "Listening...");
-                setTimeout(safeStartRecognition, 500);
-            };
-
-            window.speechSynthesis.speak(utterance);
-        }
+        // --- UI Helpers ---
 
         function addMessage(sender, text) {
             const msg = document.createElement('div');
-            msg.className = `p-3 rounded-lg text-sm max-w-[85%] ${sender === 'user' ? 'bg-sky-600 ml-auto' : 'bg-slate-800 mr-auto border border-slate-700'}`;
+            msg.className = `message-bubble p-3 rounded-2xl text-sm max-w-[85%] ${
+                sender === 'user' 
+                ? 'bg-sky-600 ml-auto rounded-tr-none text-white' 
+                : 'bg-slate-800 mr-auto rounded-tl-none border border-slate-700 text-slate-100'
+            }`;
             msg.textContent = text;
             conversationContainer.appendChild(msg);
             conversationContainer.scrollTop = conversationContainer.scrollHeight;
@@ -251,25 +295,30 @@
                 micWrapper.classList.add('active');
             } else if (state === 'speaking') {
                 micButton.classList.add('speaking');
+                micWrapper.classList.add('active');
+            } else if (state === 'processing') {
+                micButton.classList.add('listening');
+                micButton.style.opacity = "0.5";
+            } else {
+                micButton.style.opacity = "1";
             }
         }
 
         micButton.addEventListener('click', () => {
             if (!isActivated) {
                 isActivated = true;
-                handleResponse("Jarvas online. How can I help?");
+                processWithAI("System startup");
             } else {
                 if (isRecognitionActive) {
                     recognition.stop();
                 } else {
-                    safeStartRecognition();
+                    restartRecognition();
                 }
             }
         });
 
         window.onload = () => {
-            safeStartRecognition();
-            window.speechSynthesis.getVoices();
+            restartRecognition();
         };
     </script>
 </body>
