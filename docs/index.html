@@ -19,11 +19,10 @@
             padding: 0;
             overflow: hidden;
         }
-        /* Full screen overlay to capture the mandatory first click */
         #init-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(15, 23, 42, 0.98);
             z-index: 100;
             display: flex;
             flex-direction: column;
@@ -75,6 +74,7 @@
             justify-content: center;
             border: none;
             box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            transition: all 0.3s ease;
         }
         .mic-btn.listening { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .mic-btn.speaking { background: linear-gradient(135deg, #10b981, #059669); }
@@ -95,14 +95,17 @@
 <body>
 
     <div id="init-overlay">
-        <div class="text-center">
+        <div class="text-center p-6">
             <div class="mb-6 bg-sky-500/10 p-8 rounded-full inline-block animate-pulse">
                 <svg class="h-16 w-16 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
             </div>
-            <h2 class="text-2xl font-bold text-white mb-2">Initialize Jarvas</h2>
-            <p class="text-slate-400 mb-8">Tap anywhere to engage always-listening mode</p>
+            <h2 class="text-3xl font-bold text-white mb-2">Initialize Jarvas</h2>
+            <p class="text-slate-400 mb-8 max-w-xs mx-auto">Click to grant microphone access and engage always-listening mode</p>
+            <button class="px-8 py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-full transition-all shadow-lg shadow-sky-900/20">
+                WAKE SYSTEM
+            </button>
         </div>
     </div>
 
@@ -110,7 +113,7 @@
         <header class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
             <div>
                 <h1 class="text-2xl font-bold text-sky-400">Jarvas</h1>
-                <p id="status-text" class="text-xs text-slate-400 font-medium">SYSTEM OFFLINE</p>
+                <p id="status-text" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">SYSTEM STANDBY</p>
             </div>
             <div id="mic-wrapper" class="mic-container">
                 <div class="pulse-ring"></div>
@@ -123,16 +126,20 @@
         </header>
 
         <div id="conversation-container" class="flex-1 overflow-y-auto mb-4 flex flex-col gap-4 pr-2">
-            <!-- Messages will appear here -->
+            <!-- Messages load here -->
+            <div class="message-bubble bg-slate-800 mr-auto rounded-xl rounded-tl-none border border-slate-700 p-3 text-sm text-slate-100">
+                Say "Jarvis" or "Jarvas" to begin.
+            </div>
         </div>
 
         <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
-            <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Active Voice Protocol</p>
-            <p id="interim-text" class="text-sm text-sky-300 italic min-h-[1.25rem]">Waiting for voice initialization...</p>
+            <p class="text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Live Input Buffer</p>
+            <p id="interim-text" class="text-sm text-sky-300 italic min-h-[1.25rem] truncate">...</p>
         </div>
     </div>
 
     <script>
+        // Use the environment's provided API key
         const apiKey = ""; 
         const modelName = "gemini-2.5-flash-preview-09-2025";
         const ttsModelName = "gemini-2.5-flash-preview-tts";
@@ -176,7 +183,7 @@
             isProcessing = true;
             updateUI('processing', "ANALYZING...");
             
-            const systemPrompt = "You are Jarvas, an AI assistant created by Raji Technology innovator Amer Abdullah. Be extremely concise. Maximum 15 words per response.";
+            const systemPrompt = "You are Jarvas, an AI assistant created by Raji Technology innovator Amer Abdullah. Be extremely concise. Max 15 words.";
             
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -189,11 +196,12 @@
                     })
                 });
 
-                const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "Communication error.";
+                const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "System error.";
                 addMessage('jarvas', aiResponse);
                 await speak(aiResponse);
             } catch (error) {
-                statusText.textContent = "LINK ERROR";
+                console.error(error);
+                statusText.textContent = "CORE LINK ERROR";
                 isProcessing = false;
                 startListeningLoop();
             } finally {
@@ -219,9 +227,13 @@
                 });
 
                 const audioData = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-                if (audioData) await playPCM(audioData);
-                else throw new Error("TTS FAIL");
+                if (audioData) {
+                    await playPCM(audioData);
+                } else {
+                    throw new Error("No audio data");
+                }
             } catch (e) {
+                console.warn("TTS failed, falling back to browser voice", e);
                 const ut = new SpeechSynthesisUtterance(text);
                 ut.onend = () => { isSpeaking = false; startListeningLoop(); };
                 window.speechSynthesis.speak(ut);
@@ -231,17 +243,19 @@
         async function playPCM(base64Data) {
             if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const binaryString = atob(base64Data);
-            const bytes = new Int16Array(binaryString.length / 2);
-            for (let i = 0; i < binaryString.length; i += 2) {
+            const len = binaryString.length;
+            const bytes = new Int16Array(len / 2);
+            for (let i = 0; i < len; i += 2) {
                 bytes[i / 2] = (binaryString.charCodeAt(i + 1) << 8) | binaryString.charCodeAt(i);
             }
 
-            // Create WAV Blob
+            // Standard WAV construction for 24kHz mono PCM
             const buffer = new ArrayBuffer(44 + bytes.length * 2);
             const view = new DataView(buffer);
             const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+            
             writeString(0, 'RIFF');
-            view.setUint32(4, 32 + bytes.length * 2, true);
+            view.setUint32(4, 36 + bytes.length * 2, true);
             writeString(8, 'WAVE');
             writeString(12, 'fmt ');
             view.setUint32(16, 16, true);
@@ -253,23 +267,43 @@
             view.setUint16(34, 16, true);
             writeString(36, 'data');
             view.setUint32(40, bytes.length * 2, true);
-            for (let i = 0; i < bytes.length; i++) view.setInt16(44 + i * 2, bytes[i], true);
+            for (let i = 0; i < bytes.length; i++) {
+                view.setInt16(44 + i * 2, bytes[i], true);
+            }
 
             const audioBlob = new Blob([buffer], { type: 'audio/wav' });
             const audioUrl = URL.createObjectURL(audioBlob);
             const audio = new Audio(audioUrl);
-            audio.onended = () => {
-                URL.revokeObjectURL(audioUrl);
-                isSpeaking = false;
-                startListeningLoop();
-            };
-            await audio.play();
+            
+            return new Promise((resolve) => {
+                audio.onended = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    isSpeaking = false;
+                    startListeningLoop();
+                    resolve();
+                };
+                audio.onerror = () => {
+                    isSpeaking = false;
+                    startListeningLoop();
+                    resolve();
+                };
+                audio.play().catch(e => {
+                    console.error("Playback failed", e);
+                    isSpeaking = false;
+                    startListeningLoop();
+                    resolve();
+                });
+            });
         }
 
         function startListeningLoop() {
             if (isProcessing || isSpeaking) return;
             if (recognition && !isRecognitionActive) {
-                try { recognition.start(); } catch(e) {}
+                try { 
+                    recognition.start(); 
+                } catch(e) {
+                    console.error("Recognition start error", e);
+                }
             }
         }
 
@@ -287,8 +321,9 @@
 
             recognition.onend = () => { 
                 isRecognitionActive = false;
+                // Auto-restart if not busy
                 if (!isProcessing && !isSpeaking) {
-                    setTimeout(startListeningLoop, 50);
+                    setTimeout(startListeningLoop, 100);
                 }
             };
 
@@ -307,9 +342,9 @@
                     if (checkText.includes('jarvis') || checkText.includes('jarvas')) {
                         wakeWordDetected = true;
                         recognition.stop();
-                        processWithAI("Systems active. Ready for your command.");
+                        processWithAI("System active. How can I help you?");
                     }
-                } else if (finalTranscript && !isProcessing && !isSpeaking) {
+                } else if (finalTranscript.trim() && !isProcessing && !isSpeaking) {
                     addMessage('user', finalTranscript);
                     recognition.stop(); 
                     processWithAI(finalTranscript);
@@ -317,11 +352,14 @@
             };
 
             recognition.onerror = (event) => {
-                if (event.error !== 'no-speech') {
-                    isRecognitionActive = false;
-                    setTimeout(startListeningLoop, 100);
+                console.error("Speech Error:", event.error);
+                if (event.error === 'not-allowed') {
+                    statusText.textContent = "MIC PERMISSION DENIED";
                 }
+                isRecognitionActive = false;
             };
+        } else {
+            statusText.textContent = "BROWSER NOT SUPPORTED";
         }
 
         function addMessage(sender, text) {
@@ -338,13 +376,23 @@
             statusText.textContent = message;
             micIndicator.className = 'mic-btn';
             micWrapper.classList.remove('active');
-            if (state === 'listening') { micIndicator.classList.add('listening'); micWrapper.classList.add('active'); }
-            else if (state === 'speaking') { micIndicator.classList.add('speaking'); micWrapper.classList.add('active'); }
-            else if (state === 'processing') { micIndicator.style.opacity = "0.5"; }
-            else { micIndicator.style.opacity = "1"; }
+            
+            if (state === 'listening') { 
+                micIndicator.classList.add('listening'); 
+                micWrapper.classList.add('active'); 
+            }
+            else if (state === 'speaking') { 
+                micIndicator.classList.add('speaking'); 
+                micWrapper.classList.add('active'); 
+            }
+            else if (state === 'processing') { 
+                micIndicator.style.opacity = "0.5"; 
+            }
+            else { 
+                micIndicator.style.opacity = "1"; 
+            }
         }
 
-        // AUTO-ENGAGE ON FIRST CLICK
         initOverlay.addEventListener('click', () => {
             initOverlay.style.opacity = '0';
             setTimeout(() => {
@@ -354,12 +402,12 @@
             }, 500);
         });
 
-        // SAFETY HEARTBEAT
+        // Safety Heartbeat to keep recognition alive
         setInterval(() => {
             if (!isRecognitionActive && !isProcessing && !isSpeaking && audioContext) {
                 startListeningLoop();
             }
-        }, 2000);
+        }, 3000);
     </script>
 </body>
 </html>
