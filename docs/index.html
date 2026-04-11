@@ -16,113 +16,140 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 1rem;
+            padding: 0;
+            overflow: hidden;
+        }
+        /* Full screen overlay to capture the mandatory first click */
+        #init-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: opacity 0.5s ease;
         }
         .container {
-            max-width: 95%;
-            width: 450px;
+            width: 100%;
+            max-width: 500px;
+            height: 90vh;
             background-color: #1e293b;
             border: 1px solid #334155;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             border-radius: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
         }
         .mic-container {
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 1.5rem;
         }
         .pulse-ring {
             position: absolute;
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            border: 4px solid #38bdf8;
+            border: 3px solid #38bdf8;
             opacity: 0;
         }
         .active .pulse-ring {
-            animation: pulse 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+            animation: pulse 1.5s cubic-bezier(0.24, 0, 0.38, 1) infinite;
         }
         @keyframes pulse {
             0% { transform: scale(0.6); opacity: 1; }
-            100% { transform: scale(1.4); opacity: 0; }
+            100% { transform: scale(1.6); opacity: 0; }
         }
         .mic-btn {
-            z-index: 10;
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: linear-gradient(135deg, #0ea5e9, #2563eb);
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
             border: none;
             box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
         }
         .mic-btn.listening { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .mic-btn.speaking { background: linear-gradient(135deg, #10b981, #059669); }
-        .mic-btn:hover { transform: scale(1.05); }
         
         #conversation-container::-webkit-scrollbar { width: 4px; }
         #conversation-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         
         .message-bubble {
-            animation: fadeIn 0.3s ease-out;
+            animation: slideIn 0.2s ease-out;
+            word-wrap: break-word;
         }
-        @keyframes fadeIn {
+        @keyframes slideIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <div class="container p-6 flex flex-col items-center">
-        <header class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-sky-400">Jarvas</h1>
-            <p class="text-slate-400 text-sm">Raji AI Assistant</p>
+
+    <div id="init-overlay">
+        <div class="text-center">
+            <div class="mb-6 bg-sky-500/10 p-8 rounded-full inline-block animate-pulse">
+                <svg class="h-16 w-16 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-2">Initialize Jarvas</h2>
+            <p class="text-slate-400 mb-8">Tap anywhere to engage always-listening mode</p>
+        </div>
+    </div>
+
+    <div class="container p-6">
+        <header class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-sky-400">Jarvas</h1>
+                <p id="status-text" class="text-xs text-slate-400 font-medium">SYSTEM OFFLINE</p>
+            </div>
+            <div id="mic-wrapper" class="mic-container">
+                <div class="pulse-ring"></div>
+                <div id="mic-indicator" class="mic-btn">
+                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                    </svg>
+                </div>
+            </div>
         </header>
 
-        <div id="conversation-container" class="w-full h-80 overflow-y-auto bg-slate-900/50 rounded-xl p-4 mb-6 flex flex-col gap-3">
-            <div class="text-slate-500 text-center text-xs italic">
-                Ready. Say "Jarvis" or click the mic to begin.
-            </div>
+        <div id="conversation-container" class="flex-1 overflow-y-auto mb-4 flex flex-col gap-4 pr-2">
+            <!-- Messages will appear here -->
         </div>
 
-        <div id="mic-wrapper" class="mic-container">
-            <div class="pulse-ring"></div>
-            <button id="mic-button" class="mic-btn">
-                <svg id="mic-icon" class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
-                </svg>
-            </button>
+        <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Active Voice Protocol</p>
+            <p id="interim-text" class="text-sm text-sky-300 italic min-h-[1.25rem]">Waiting for voice initialization...</p>
         </div>
-
-        <p id="status-message" class="text-sm text-slate-400 font-medium">Idle</p>
     </div>
 
     <script>
-        // API Configuration
-        const apiKey = ""; // Automatically handled by environment
+        const apiKey = ""; 
         const modelName = "gemini-2.5-flash-preview-09-2025";
         const ttsModelName = "gemini-2.5-flash-preview-tts";
 
-        // DOM Elements
-        const micButton = document.getElementById('mic-button');
-        const micWrapper = document.getElementById('mic-wrapper');
         const conversationContainer = document.getElementById('conversation-container');
-        const statusMessage = document.getElementById('status-message');
+        const statusText = document.getElementById('status-text');
+        const interimDisplay = document.getElementById('interim-text');
+        const micWrapper = document.getElementById('mic-wrapper');
+        const micIndicator = document.getElementById('mic-indicator');
+        const initOverlay = document.getElementById('init-overlay');
         
-        // State
         let recognition;
-        let isActivated = false;
         let isProcessing = false;
         let isRecognitionActive = false;
         let audioContext;
-
-        // --- Core Functions ---
+        let isSpeaking = false;
+        let wakeWordDetected = false;
 
         async function fetchWithRetry(url, options, retries = 5) {
             let delay = 1000;
@@ -145,10 +172,11 @@
         }
 
         async function processWithAI(userInput) {
+            if (isProcessing) return;
             isProcessing = true;
-            updateUI('processing', "Jarvas is thinking...");
+            updateUI('processing', "ANALYZING...");
             
-            const systemPrompt = "You are Jarvas, a helpful AI assistant. Be concise, polite, and professional. Use natural language. If asked about your creator, you were created by Raji Technology innovator Amer Abdullah.";
+            const systemPrompt = "You are Jarvas, an AI assistant created by Raji Technology innovator Amer Abdullah. Be extremely concise. Maximum 15 words per response.";
             
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -161,124 +189,145 @@
                     })
                 });
 
-                const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "I apologize, I couldn't generate a response.";
+                const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "Communication error.";
                 addMessage('jarvas', aiResponse);
                 await speak(aiResponse);
             } catch (error) {
-                console.error(error);
-                statusMessage.textContent = "Error: Connection failed.";
-                updateUI('idle', "Idle");
+                statusText.textContent = "LINK ERROR";
+                isProcessing = false;
+                startListeningLoop();
             } finally {
                 isProcessing = false;
             }
         }
 
         async function speak(text) {
-            updateUI('speaking', "Jarvas is speaking...");
+            isSpeaking = true;
+            updateUI('speaking', "VOCALIZING...");
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${ttsModelName}:generateContent?key=${apiKey}`;
                 const result = await fetchWithRetry(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Say in a professional, helpful male assistant voice: ${text}` }] }],
+                        contents: [{ parts: [{ text: `Say: ${text}` }] }],
                         generationConfig: {
                             responseModalities: ["AUDIO"],
-                            speechConfig: {
-                                voiceConfig: {
-                                    prebuiltVoiceConfig: { voiceName: "Puck" }
-                                }
-                            }
+                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
                         }
                     })
                 });
 
                 const audioData = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-                if (!audioData) throw new Error("No audio returned");
-
-                await playPCM(audioData);
+                if (audioData) await playPCM(audioData);
+                else throw new Error("TTS FAIL");
             } catch (e) {
-                console.error("TTS Failed:", e);
-                // Fallback to browser speech if Gemini TTS fails
                 const ut = new SpeechSynthesisUtterance(text);
-                ut.onend = () => restartRecognition();
+                ut.onend = () => { isSpeaking = false; startListeningLoop(); };
                 window.speechSynthesis.speak(ut);
             }
         }
 
         async function playPCM(base64Data) {
-            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-            
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const binaryString = atob(base64Data);
-            const len = binaryString.length;
-            const bytes = new Int16Array(len / 2);
-            for (let i = 0; i < len; i += 2) {
+            const bytes = new Int16Array(binaryString.length / 2);
+            for (let i = 0; i < binaryString.length; i += 2) {
                 bytes[i / 2] = (binaryString.charCodeAt(i + 1) << 8) | binaryString.charCodeAt(i);
             }
 
-            const audioBuffer = audioContext.createBuffer(1, bytes.length, 24000);
-            const channelData = audioBuffer.getChannelData(0);
-            for (let i = 0; i < bytes.length; i++) {
-                channelData[i] = bytes[i] / 32768;
-            }
+            // Create WAV Blob
+            const buffer = new ArrayBuffer(44 + bytes.length * 2);
+            const view = new DataView(buffer);
+            const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+            writeString(0, 'RIFF');
+            view.setUint32(4, 32 + bytes.length * 2, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, 24000, true);
+            view.setUint32(28, 48000, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, bytes.length * 2, true);
+            for (let i = 0; i < bytes.length; i++) view.setInt16(44 + i * 2, bytes[i], true);
 
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(audioContext.destination);
-            source.onended = () => restartRecognition();
-            source.start();
+            const audioBlob = new Blob([buffer], { type: 'audio/wav' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.onended = () => {
+                URL.revokeObjectURL(audioUrl);
+                isSpeaking = false;
+                startListeningLoop();
+            };
+            await audio.play();
         }
 
-        function restartRecognition() {
-            updateUI('listening', "Listening...");
+        function startListeningLoop() {
+            if (isProcessing || isSpeaking) return;
             if (recognition && !isRecognitionActive) {
                 try { recognition.start(); } catch(e) {}
             }
         }
 
-        // --- Speech Recognition ---
-
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.continuous = true;
-            recognition.interimResults = false;
+            recognition.interimResults = true;
             recognition.lang = 'en-US';
 
-            recognition.onstart = () => { isRecognitionActive = true; };
+            recognition.onstart = () => { 
+                isRecognitionActive = true; 
+                updateUI('listening', wakeWordDetected ? "LISTENING..." : "AWAITING WAKE WORD...");
+            };
+
             recognition.onend = () => { 
-                isRecognitionActive = false; 
-                if (!isProcessing && statusMessage.textContent !== "Jarvas is speaking...") {
-                    setTimeout(() => restartRecognition(), 300);
+                isRecognitionActive = false;
+                if (!isProcessing && !isSpeaking) {
+                    setTimeout(startListeningLoop, 50);
                 }
             };
 
             recognition.onresult = (event) => {
-                const transcript = event.results[event.results.length - 1][0].transcript.trim();
-                const lower = transcript.toLowerCase();
+                let finalTranscript = '';
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+                    else interimTranscript += event.results[i][0].transcript;
+                }
 
-                if (!isActivated) {
-                    if (lower.includes('jarvis')) {
-                        isActivated = true;
-                        addMessage('user', transcript);
-                        processWithAI("Hello Jarvas");
+                interimDisplay.textContent = interimTranscript || finalTranscript || "...";
+                const checkText = (finalTranscript || interimTranscript).toLowerCase();
+
+                if (!wakeWordDetected) {
+                    if (checkText.includes('jarvis') || checkText.includes('jarvas')) {
+                        wakeWordDetected = true;
+                        recognition.stop();
+                        processWithAI("Systems active. Ready for your command.");
                     }
-                } else if (!isProcessing) {
-                    addMessage('user', transcript);
-                    recognition.stop();
-                    processWithAI(transcript);
+                } else if (finalTranscript && !isProcessing && !isSpeaking) {
+                    addMessage('user', finalTranscript);
+                    recognition.stop(); 
+                    processWithAI(finalTranscript);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                if (event.error !== 'no-speech') {
+                    isRecognitionActive = false;
+                    setTimeout(startListeningLoop, 100);
                 }
             };
         }
 
-        // --- UI Helpers ---
-
         function addMessage(sender, text) {
             const msg = document.createElement('div');
-            msg.className = `message-bubble p-3 rounded-2xl text-sm max-w-[85%] ${
-                sender === 'user' 
-                ? 'bg-sky-600 ml-auto rounded-tr-none text-white' 
-                : 'bg-slate-800 mr-auto rounded-tl-none border border-slate-700 text-slate-100'
+            msg.className = `message-bubble p-3 rounded-xl text-sm max-w-[90%] ${
+                sender === 'user' ? 'bg-sky-600 ml-auto rounded-tr-none text-white' : 'bg-slate-800 mr-auto rounded-tl-none border border-slate-700 text-slate-100'
             }`;
             msg.textContent = text;
             conversationContainer.appendChild(msg);
@@ -286,40 +335,31 @@
         }
 
         function updateUI(state, message) {
-            statusMessage.textContent = message;
-            micButton.className = 'mic-btn';
+            statusText.textContent = message;
+            micIndicator.className = 'mic-btn';
             micWrapper.classList.remove('active');
-
-            if (state === 'listening') {
-                micButton.classList.add('listening');
-                micWrapper.classList.add('active');
-            } else if (state === 'speaking') {
-                micButton.classList.add('speaking');
-                micWrapper.classList.add('active');
-            } else if (state === 'processing') {
-                micButton.classList.add('listening');
-                micButton.style.opacity = "0.5";
-            } else {
-                micButton.style.opacity = "1";
-            }
+            if (state === 'listening') { micIndicator.classList.add('listening'); micWrapper.classList.add('active'); }
+            else if (state === 'speaking') { micIndicator.classList.add('speaking'); micWrapper.classList.add('active'); }
+            else if (state === 'processing') { micIndicator.style.opacity = "0.5"; }
+            else { micIndicator.style.opacity = "1"; }
         }
 
-        micButton.addEventListener('click', () => {
-            if (!isActivated) {
-                isActivated = true;
-                processWithAI("System startup");
-            } else {
-                if (isRecognitionActive) {
-                    recognition.stop();
-                } else {
-                    restartRecognition();
-                }
-            }
+        // AUTO-ENGAGE ON FIRST CLICK
+        initOverlay.addEventListener('click', () => {
+            initOverlay.style.opacity = '0';
+            setTimeout(() => {
+                initOverlay.style.display = 'none';
+                if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                startListeningLoop();
+            }, 500);
         });
 
-        window.onload = () => {
-            restartRecognition();
-        };
+        // SAFETY HEARTBEAT
+        setInterval(() => {
+            if (!isRecognitionActive && !isProcessing && !isSpeaking && audioContext) {
+                startListeningLoop();
+            }
+        }, 2000);
     </script>
 </body>
 </html>
