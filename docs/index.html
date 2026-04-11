@@ -48,6 +48,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            cursor: pointer;
         }
         .pulse-ring {
             position: absolute;
@@ -78,6 +79,7 @@
         }
         .mic-btn.listening { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .mic-btn.speaking { background: linear-gradient(135deg, #10b981, #059669); }
+        .mic-btn.error { background: #ef4444; }
         
         #conversation-container::-webkit-scrollbar { width: 4px; }
         #conversation-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
@@ -102,9 +104,9 @@
                 </svg>
             </div>
             <h2 class="text-3xl font-bold text-white mb-2">Initialize Jarvas</h2>
-            <p class="text-slate-400 mb-8 max-w-xs mx-auto">Click to grant microphone access and engage always-listening mode</p>
+            <p class="text-slate-400 mb-8 max-w-xs mx-auto">Click to boot. Requires HTTPS and Mic permission on hosted sites.</p>
             <button class="px-8 py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-full transition-all shadow-lg shadow-sky-900/20">
-                WAKE SYSTEM
+                BOOT SYSTEM
             </button>
         </div>
     </div>
@@ -113,12 +115,12 @@
         <header class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
             <div>
                 <h1 class="text-2xl font-bold text-sky-400">Jarvas</h1>
-                <p id="status-text" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">SYSTEM STANDBY</p>
+                <p id="status-text" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">SYSTEM READY</p>
             </div>
-            <div id="mic-wrapper" class="mic-container">
+            <div id="mic-wrapper" class="mic-container" onclick="manualTrigger()">
                 <div class="pulse-ring"></div>
                 <div id="mic-indicator" class="mic-btn">
-                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg id="mic-icon" class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
                     </svg>
                 </div>
@@ -127,18 +129,19 @@
 
         <div id="conversation-container" class="flex-1 overflow-y-auto mb-4 flex flex-col gap-4 pr-2">
             <div class="message-bubble bg-slate-800 mr-auto rounded-xl rounded-tl-none border border-slate-700 p-3 text-sm text-slate-100">
-                Jarvas online. Say "Jarvas" or click the wake button to begin.
+                Jarvas online. Say "Jarvis" or tap the icon to speak. 
             </div>
         </div>
 
         <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
-            <p class="text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Live Input Buffer</p>
+            <p class="text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Live Buffer</p>
             <p id="interim-text" class="text-sm text-sky-300 italic min-h-[1.25rem] truncate">...</p>
         </div>
     </div>
 
     <script>
-        const apiKey = ""; 
+        // Updated with user provided API Key
+        const apiKey = "AIzaSyC1PR5BJgcEN_jjpbxtsct7SHgT-ECHnwY"; 
         const modelName = "gemini-2.5-flash-preview-09-2025";
         const ttsModelName = "gemini-2.5-flash-preview-tts";
 
@@ -181,7 +184,7 @@
             isProcessing = true;
             updateUI('processing', "ANALYZING...");
             
-            const systemPrompt = "You are Jarvas, an AI assistant created by Raji Technology innovator Amer Abdullah. Be extremely concise. Respond in under 15 words.";
+            const systemPrompt = "You are Jarvas, an AI created by Raji Technology innovator Amer Abdullah. Be extremely concise (under 10 words).";
             
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -199,7 +202,7 @@
                 await speak(aiResponse);
             } catch (error) {
                 console.error(error);
-                statusText.textContent = "CORE LINK ERROR";
+                statusText.textContent = "CORE ERROR";
                 isProcessing = false;
                 startListeningLoop();
             } finally {
@@ -216,7 +219,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Say in a helpful assistant voice: ${text}` }] }],
+                        contents: [{ parts: [{ text: `Say briefly: ${text}` }] }],
                         generationConfig: {
                             responseModalities: ["AUDIO"],
                             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
@@ -231,7 +234,7 @@
                     throw new Error("No audio data");
                 }
             } catch (e) {
-                console.warn("TTS fallback", e);
+                // Fallback to browser TTS if API fails
                 const ut = new SpeechSynthesisUtterance(text);
                 ut.onend = () => { isSpeaking = false; startListeningLoop(); };
                 window.speechSynthesis.speak(ut);
@@ -284,7 +287,7 @@
                     startListeningLoop();
                     resolve();
                 };
-                audio.play().catch(e => {
+                audio.play().catch(() => {
                     isSpeaking = false;
                     startListeningLoop();
                     resolve();
@@ -292,13 +295,23 @@
             });
         }
 
+        function manualTrigger() {
+            if (isProcessing || isSpeaking) return;
+            wakeWordDetected = true; // Bypass wake word after manual tap
+            if (isRecognitionActive) {
+                recognition.stop();
+            } else {
+                startListeningLoop();
+            }
+        }
+
         function startListeningLoop() {
             if (isProcessing || isSpeaking) return;
-            if (recognition && !isRecognitionActive) {
+            if (recognition) {
                 try { 
                     recognition.start(); 
-                } catch(e) {
-                    console.error("Recognition start error", e);
+                } catch(e) { 
+                    // Already running or error starting
                 }
             }
         }
@@ -312,13 +325,13 @@
 
             recognition.onstart = () => { 
                 isRecognitionActive = true; 
-                updateUI('listening', wakeWordDetected ? "LISTENING..." : "AWAITING WAKE WORD...");
+                updateUI('listening', wakeWordDetected ? "LISTENING..." : "SAY 'JARVAS'");
             };
 
             recognition.onend = () => { 
                 isRecognitionActive = false;
                 if (!isProcessing && !isSpeaking) {
-                    setTimeout(startListeningLoop, 100);
+                    setTimeout(startListeningLoop, 300);
                 }
             };
 
@@ -337,9 +350,9 @@
                     if (checkText.includes('jarvis') || checkText.includes('jarvas')) {
                         wakeWordDetected = true;
                         recognition.stop();
-                        processWithAI("Jarvas online. How can I assist you today?");
+                        processWithAI("I am here. How can I assist you?");
                     }
-                } else if (finalTranscript.trim() && !isProcessing && !isSpeaking) {
+                } else if (finalTranscript.trim()) {
                     addMessage('user', finalTranscript);
                     recognition.stop(); 
                     processWithAI(finalTranscript);
@@ -347,13 +360,15 @@
             };
 
             recognition.onerror = (event) => {
+                console.error("Speech Recognition Error:", event.error);
                 if (event.error === 'not-allowed') {
-                    statusText.textContent = "MIC PERMISSION DENIED";
+                    statusText.textContent = "PERMISSION DENIED";
+                    micIndicator.classList.add('error');
                 }
                 isRecognitionActive = false;
             };
         } else {
-            statusText.textContent = "BROWSER NOT SUPPORTED";
+            statusText.textContent = "INCOMPATIBLE BROWSER";
         }
 
         function addMessage(sender, text) {
@@ -368,7 +383,7 @@
 
         function updateUI(state, message) {
             statusText.textContent = message;
-            micIndicator.className = 'mic-btn';
+            micIndicator.classList.remove('listening', 'speaking', 'error');
             micWrapper.classList.remove('active');
             
             if (state === 'listening') { 
@@ -378,12 +393,6 @@
             else if (state === 'speaking') { 
                 micIndicator.classList.add('speaking'); 
                 micWrapper.classList.add('active'); 
-            }
-            else if (state === 'processing') { 
-                micIndicator.style.opacity = "0.5"; 
-            }
-            else { 
-                micIndicator.style.opacity = "1"; 
             }
         }
 
@@ -395,12 +404,6 @@
                 startListeningLoop();
             }, 500);
         });
-
-        setInterval(() => {
-            if (!isRecognitionActive && !isProcessing && !isSpeaking && audioContext) {
-                startListeningLoop();
-            }
-        }, 3000);
     </script>
 </body>
 </html>
