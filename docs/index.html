@@ -126,9 +126,8 @@
         </header>
 
         <div id="conversation-container" class="flex-1 overflow-y-auto mb-4 flex flex-col gap-4 pr-2">
-            <!-- Messages load here -->
             <div class="message-bubble bg-slate-800 mr-auto rounded-xl rounded-tl-none border border-slate-700 p-3 text-sm text-slate-100">
-                Say "Jarvis" or "Jarvas" to begin.
+                Jarvas online. Say "Jarvas" or click the wake button to begin.
             </div>
         </div>
 
@@ -139,7 +138,6 @@
     </div>
 
     <script>
-        // Use the environment's provided API key
         const apiKey = ""; 
         const modelName = "gemini-2.5-flash-preview-09-2025";
         const ttsModelName = "gemini-2.5-flash-preview-tts";
@@ -183,7 +181,7 @@
             isProcessing = true;
             updateUI('processing', "ANALYZING...");
             
-            const systemPrompt = "You are Jarvas, an AI assistant created by Raji Technology innovator Amer Abdullah. Be extremely concise. Max 15 words.";
+            const systemPrompt = "You are Jarvas, an AI assistant created by Raji Technology innovator Amer Abdullah. Be extremely concise. Respond in under 15 words.";
             
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -196,7 +194,7 @@
                     })
                 });
 
-                const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "System error.";
+                const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "Link failure.";
                 addMessage('jarvas', aiResponse);
                 await speak(aiResponse);
             } catch (error) {
@@ -218,7 +216,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Say: ${text}` }] }],
+                        contents: [{ parts: [{ text: `Say in a helpful assistant voice: ${text}` }] }],
                         generationConfig: {
                             responseModalities: ["AUDIO"],
                             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
@@ -233,7 +231,7 @@
                     throw new Error("No audio data");
                 }
             } catch (e) {
-                console.warn("TTS failed, falling back to browser voice", e);
+                console.warn("TTS fallback", e);
                 const ut = new SpeechSynthesisUtterance(text);
                 ut.onend = () => { isSpeaking = false; startListeningLoop(); };
                 window.speechSynthesis.speak(ut);
@@ -249,7 +247,6 @@
                 bytes[i / 2] = (binaryString.charCodeAt(i + 1) << 8) | binaryString.charCodeAt(i);
             }
 
-            // Standard WAV construction for 24kHz mono PCM
             const buffer = new ArrayBuffer(44 + bytes.length * 2);
             const view = new DataView(buffer);
             const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
@@ -288,7 +285,6 @@
                     resolve();
                 };
                 audio.play().catch(e => {
-                    console.error("Playback failed", e);
                     isSpeaking = false;
                     startListeningLoop();
                     resolve();
@@ -321,7 +317,6 @@
 
             recognition.onend = () => { 
                 isRecognitionActive = false;
-                // Auto-restart if not busy
                 if (!isProcessing && !isSpeaking) {
                     setTimeout(startListeningLoop, 100);
                 }
@@ -342,7 +337,7 @@
                     if (checkText.includes('jarvis') || checkText.includes('jarvas')) {
                         wakeWordDetected = true;
                         recognition.stop();
-                        processWithAI("System active. How can I help you?");
+                        processWithAI("Jarvas online. How can I assist you today?");
                     }
                 } else if (finalTranscript.trim() && !isProcessing && !isSpeaking) {
                     addMessage('user', finalTranscript);
@@ -352,7 +347,6 @@
             };
 
             recognition.onerror = (event) => {
-                console.error("Speech Error:", event.error);
                 if (event.error === 'not-allowed') {
                     statusText.textContent = "MIC PERMISSION DENIED";
                 }
@@ -402,7 +396,6 @@
             }, 500);
         });
 
-        // Safety Heartbeat to keep recognition alive
         setInterval(() => {
             if (!isRecognitionActive && !isProcessing && !isSpeaking && audioContext) {
                 startListeningLoop();
