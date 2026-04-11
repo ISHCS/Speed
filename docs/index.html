@@ -9,371 +9,267 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #121212;
-            color: #E0E0E0;
+            background-color: #0f172a;
+            color: #f1f5f9;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            margin: 0;
             padding: 1rem;
         }
         .container {
-            max-width: 90%;
-            width: 500px;
-            background-color: #1E1E1E;
-            border: 2px solid #333;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25), 0 10px 20px rgba(0, 0, 0, 0.4);
+            max-width: 95%;
+            width: 450px;
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border-radius: 1.5rem;
         }
-        .listening-animation {
-            width: 80px;
-            height: 80px;
-            background-color: #4CAF50;
-            border-radius: 50%;
-            cursor: pointer;
+        .mic-container {
             position: relative;
-            animation: pulse 1.5s infinite;
-            box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
-            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1.5rem;
         }
-        .listening-animation:hover {
-            box-shadow: 0 0 0 10px rgba(76, 175, 80, 0.4);
-        }
-        .listening-animation.speaking {
-            background-color: #2196F3;
-            animation: none;
-        }
-        .listening-animation.speaking::before {
-            content: '';
+        .pulse-ring {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #2196F3, #0D47A1);
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
-            animation: wave 1s ease-in-out infinite;
+            border: 4px solid #38bdf8;
+            opacity: 0;
         }
-        .listening-animation.listening {
-            background-color: #FBC02D;
-            animation: pulse 1s infinite;
-        }
-        .listening-animation.listening::before {
-             content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #FBC02D, #FF6F00);
-            border-radius: 50%;
-            animation: wave 1s ease-in-out infinite;
-        }
-        .listening-animation.initial {
-            background-color: #4CAF50;
-            animation: none;
-            box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
-        }
-        .listening-animation.initial:hover {
-            box-shadow: 0 0 0 10px rgba(76, 175, 80, 0.4);
-        }
-        .listening-animation.initial::before {
-             content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #4CAF50, #2E7D32);
-            border-radius: 50%;
-            animation: none;
+        .active .pulse-ring {
+            animation: pulse 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
         }
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
-            70% { box-shadow: 0 0 0 20px rgba(76, 175, 80, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+            0% { transform: scale(0.6); opacity: 1; }
+            100% { transform: scale(1.4); opacity: 0; }
         }
-        @keyframes wave {
-            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
-            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.5; }
-            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+        .mic-btn {
+            z-index: 10;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
         }
+        .mic-btn.listening { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .mic-btn.speaking { background: linear-gradient(135deg, #10b981, #059669); }
+        .mic-btn:hover { transform: scale(1.05); }
+        
+        #conversation-container::-webkit-scrollbar { width: 4px; }
+        #conversation-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200">
-    <!-- Main application container -->
-    <div class="container rounded-3xl p-6 flex flex-col items-center">
-        <!-- Title and description -->
-        <h1 class="text-3xl font-bold mb-2">Jarvas</h1>
-        <p class="text-gray-400 text-center mb-6">Raji AI Assistant</p>
+<body>
+    <div class="container p-6 flex flex-col items-center">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-sky-400">Jarvas</h1>
+            <p class="text-slate-400 text-sm">Raji AI Assistant</p>
+        </header>
 
-        <!-- Conversation display area -->
-        <div id="conversation-container" class="w-full h-80 overflow-y-auto bg-gray-800 rounded-lg p-4 mb-6 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
-            <div class="text-gray-500 text-center italic">
-                <p>Jarvas is waiting for its wake word: "Jarvis"</p>
+        <div id="conversation-container" class="w-full h-64 overflow-y-auto bg-slate-900/50 rounded-xl p-4 mb-6 flex flex-col gap-3">
+            <div class="text-slate-500 text-center text-xs italic">
+                Ready. Say "Jarvis" or click the mic to begin.
             </div>
         </div>
 
-        <!-- Microphone activation button -->
-        <div id="mic-button" class="listening-animation initial flex items-center justify-center">
-            <svg class="h-10 w-10 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.298 1.298 0 011.026-.508h10.96a1.298 1.298 0 011.026.508l-1.921 2.305a2 2 0 01-1.637.702H7.023a2 2 0 01-1.637-.702l-1.921-2.305zM10 18a1 1 0 001-1v-4a1 1 0 10-2 0v4a1 1 0 001 1z" clip-rule="evenodd" fill-rule="evenodd"></path>
-            </svg>
+        <div id="mic-wrapper" class="mic-container">
+            <div class="pulse-ring"></div>
+            <button id="mic-button" class="mic-btn">
+                <svg id="mic-icon" class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                </svg>
+            </button>
         </div>
-        <!-- Status message display -->
-        <p id="status-message" class="mt-4 text-center text-gray-400">Listening for "Jarvis"...</p>
+
+        <p id="status-message" class="text-sm text-slate-400 font-medium">Idle</p>
     </div>
 
-    <!-- Script block -->
     <script>
-        // --- Configuration and Initialization ---
+        const apiKey = ""; // Environment provided
         const micButton = document.getElementById('mic-button');
+        const micWrapper = document.getElementById('mic-wrapper');
         const conversationContainer = document.getElementById('conversation-container');
         const statusMessage = document.getElementById('status-message');
-        let isListening = false;
-        let isSpeaking = false;
+        
         let recognition;
-        let synthesis = window.speechSynthesis;
-        let voice;
-        let isActivated = false; // New state variable to track if the assistant is active
+        let isActivated = false;
+        let isProcessing = false;
+        let isRecognitionActive = false; // Track the actual state of the recognition engine
 
-        // Set up the voice for Jarvas.
-        function setVoice() {
-            const voices = synthesis.getVoices();
-            // Try to find a deep, male-sounding voice.
-            voice = voices.find(v => v.name.includes("Google UK English Male")) ||
-                    voices.find(v => v.name.includes("Google US English Male")) ||
-                    voices.find(v => v.name.includes("male") && v.lang === "en-US") ||
-                    voices.find(v => v.lang === "en-US");
-            if (!voice) {
-                console.warn("Could not find a suitable voice. Using default.");
+        // Safely start recognition
+        function safeStartRecognition() {
+            if (recognition && !isRecognitionActive && !isProcessing && !window.speechSynthesis.speaking) {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.warn("Recognition start failed:", e);
+                }
             }
         }
-        synthesis.onvoiceschanged = setVoice;
 
-        // Add a message to the conversation log
-        function addMessage(sender, text, isUser = true) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('mb-2', 'p-3', 'rounded-lg', 'max-w-[80%]');
-            messageDiv.style.backgroundColor = isUser ? '#333' : '#444';
-            messageDiv.style.marginLeft = isUser ? 'auto' : '0';
-            messageDiv.textContent = text;
-            conversationContainer.appendChild(messageDiv);
-            conversationContainer.scrollTop = conversationContainer.scrollHeight; // Scroll to the bottom
-        }
-
-        // --- Speech Recognition ---
-        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        // Initialize Speech Recognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
             recognition.continuous = true;
             recognition.interimResults = false;
             recognition.lang = 'en-US';
 
             recognition.onstart = () => {
-                isListening = true;
-                // Update UI to reflect the listening state
-                if (isActivated) {
-                    micButton.classList.remove('initial');
-                    micButton.classList.add('listening');
-                    statusMessage.textContent = "Listening for your command...";
-                } else {
-                    micButton.classList.remove('listening', 'speaking');
-                    micButton.classList.add('initial');
-                    statusMessage.textContent = "Listening for 'Jarvis'... (Performance depends on your microphone)";
-                }
-                console.log("Speech recognition started.");
+                isRecognitionActive = true;
+                updateUI('listening', isActivated ? "Listening for command..." : "Listening for 'Jarvis'...");
             };
 
             recognition.onresult = (event) => {
-                const transcript = event.results[event.results.length - 1][0].transcript;
-                const lowerTranscript = transcript.toLowerCase();
-                
-                // Only process the command if the assistant is active or the wake word is detected
+                const transcript = event.results[event.results.length - 1][0].transcript.trim();
+                const lower = transcript.toLowerCase();
+
                 if (!isActivated) {
-                    if (lowerTranscript.includes('jarvis')) {
-                        console.log(`Wake word detected: ${transcript}`);
-                        addMessage('user', transcript, true);
+                    if (lower.includes('jarvis')) {
                         isActivated = true;
-                        // Stop recognition to avoid conflicts while the assistant is speaking
-                        recognition.stop();
-                        speak("How can I help you today?");
+                        addMessage('user', transcript);
+                        handleResponse("Yes? How can I help you today?");
                     }
-                } else {
-                    // Check if the assistant is not already speaking before processing a new command
-                    if (!isSpeaking) {
-                        addMessage('user', transcript, true);
-                        // Stop recognition before processing the command to prevent conflicts
-                        recognition.stop();
-                        processCommand(transcript);
-                    }
+                } else if (!isProcessing) {
+                    addMessage('user', transcript);
+                    processWithAI(transcript);
                 }
             };
 
             recognition.onerror = (event) => {
-                // Do not stop recognition for 'no-speech' or 'aborted' errors, let it naturally end
                 if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                    console.error('Speech recognition error:', event.error);
-                    statusMessage.textContent = `Error: ${event.error}`;
-                    recognition.stop();
-                } else if (event.error === 'no-speech') {
-                    console.log("No speech detected. The system is still running.");
-                    statusMessage.textContent = "I didn't hear anything. Still listening for 'Jarvis'...";
-                } else {
-                    // recognition was aborted, which is expected behaviour in our flow.
-                    console.log("Recognition aborted.");
+                    console.error("Recognition error:", event.error);
+                    statusMessage.textContent = "Mic Error: " + event.error;
                 }
             };
 
             recognition.onend = () => {
-                isListening = false;
-                console.log("Speech recognition ended.");
-                // Only restart recognition from the utterance onend handler to prevent conflicts.
+                isRecognitionActive = false;
+                // Only restart if we aren't busy with AI or TTS
+                if (!isProcessing && !window.speechSynthesis.speaking) {
+                    setTimeout(safeStartRecognition, 300);
+                }
             };
-        } else {
-            statusMessage.textContent = "Your browser does not support Speech Recognition. Please try a modern browser like Chrome.";
-            micButton.disabled = true;
         }
 
-        // --- Main Logic ---
-        async function processCommand(command) {
-            micButton.classList.remove('listening');
-            micButton.classList.add('initial');
-            statusMessage.textContent = "Processing command...";
-
-            const lowerCommand = command.toLowerCase();
+        async function processWithAI(userInput) {
+            isProcessing = true;
+            updateUI('processing', "Jarvas is thinking...");
             
-            if (lowerCommand.includes('who created you') || lowerCommand.includes('who made you')) {
-                const creatorResponse = "I was created by Raji Technology innovator Amer Abdullah.";
-                addMessage('Jarvas', creatorResponse, false);
-                speak(creatorResponse);
-                return;
-            }
-            
-            if (lowerCommand.includes('goodbye') || lowerCommand.includes('thank you')) {
-                isActivated = false;
-                const farewellMessage = "Goodbye. It was a pleasure assisting you.";
-                addMessage('Jarvas', farewellMessage, false);
-                speak(farewellMessage);
-                return;
+            if (recognition) {
+                recognition.stop();
             }
 
-            const prompt = `You are an AI assistant named Jarvas (Advanced Virtual Assistant). Your role is to provide proactive, articulate, and helpful responses to a user's commands.
-            You have access to information and can simulate actions. Here are some examples of what you can do:
-            - Information: Provide real-time data, like "What's the weather?"
-            - Task management: Create and manage reminders or to-do lists.
-            - Jokes/Conversation: Tell a joke, or answer a question.
-            - Smart home: Simulate controlling devices, e.g., "turn on the lights."
-            - Greetings: Respond to greetings like "Hello" or "Good morning."
-            - Farewell: Respond appropriately to "Goodbye" or "See you later."
-
-            Based on the user's input, provide a concise and helpful response. If the user asks for a feature you cannot perform (like "send an email"), explain your limitations in a helpful way. Do not mention that you are an AI model or a large language model.
-
-            User: ${command}`;
+            const systemPrompt = "You are Jarvas, a helpful AI assistant. Be concise, polite, and professional. Use natural language. If asked about your creator, you were created by Raji Technology innovator Amer Abdullah.";
+            
+            const fetchWithRetry = async (url, options, retries = 5, backoff = 1000) => {
+                try {
+                    const res = await fetch(url, options);
+                    if (!res.ok) throw new Error(res.statusText);
+                    return await res.json();
+                } catch (err) {
+                    if (retries <= 0) throw err;
+                    await new Promise(resolve => setTimeout(resolve, backoff));
+                    return fetchWithRetry(url, options, retries - 1, backoff * 2);
+                }
+            };
 
             try {
-                // Using Gemini API for NLU and NLG
-                const apiKey = "AIzaSyBNkZ4utmCncWF-1y1gx2Gk1VHWJuf07AQ";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                
-                const payload = {
-                    contents: [{
-                        role: "user",
-                        parts: [{ text: prompt }]
-                    }]
-                };
-
-                const response = await fetch(apiUrl, {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const data = await fetchWithRetry(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: userInput }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] }
+                    })
                 });
-                
-                if (!response.ok) {
-                    throw new Error(`API error: ${response.status} ${response.statusText}`);
-                }
 
-                const result = await response.json();
-                const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-                
-                if (text) {
-                    // Remove any Markdown bolding (**text**) before speaking
-                    const cleanedText = text.replace(/\*\*/g, '');
-                    addMessage('Jarvas', cleanedText, false);
-                    speak(cleanedText);
-                } else {
-                    speak("I'm sorry, I couldn't generate a response. Please try again.");
-                }
-
+                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't process that.";
+                handleResponse(aiResponse);
             } catch (error) {
-                console.error('Error processing command:', error);
-                speak("I'm sorry, I'm having trouble connecting. Please check your internet connection.");
+                handleResponse("I am having trouble reaching my servers. Please check your connection.");
+            } finally {
+                isProcessing = false;
+                // Recognition will be restarted in speak() or on end of speech
             }
         }
 
-        // --- Text-to-Speech ---
+        function handleResponse(text) {
+            addMessage('jarvas', text);
+            speak(text);
+        }
+
         function speak(text) {
-            if (synthesis.speaking) {
-                synthesis.cancel();
-            }
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.voice = voice;
-            utterance.pitch = 0.8; // Lowered pitch for a deeper voice
-            utterance.rate = 0.9; // Lowered rate for a more deliberate pace
             
+            const voices = window.speechSynthesis.getVoices();
+            utterance.voice = voices.find(v => v.name.includes("Male") || v.name.includes("UK")) || voices[0];
+            utterance.pitch = 0.9;
+            utterance.rate = 1.0;
+
             utterance.onstart = () => {
-                isSpeaking = true;
-                micButton.classList.remove('initial', 'listening');
-                micButton.classList.add('speaking');
-                statusMessage.textContent = "Jarvas is speaking...";
+                if (recognition) recognition.stop();
+                updateUI('speaking', "Jarvas is speaking...");
             };
 
-            // After speaking is finished, restart the recognition to listen for the next command
             utterance.onend = () => {
-                isSpeaking = false;
-                micButton.classList.remove('speaking');
-                if (isActivated) {
-                    micButton.classList.add('listening');
-                    statusMessage.textContent = "Listening for your command...";
-                } else {
-                    micButton.classList.add('initial');
-                    statusMessage.textContent = "Listening for 'Jarvis'... (Performance depends on your microphone)";
-                }
-                 try {
-                    // Start listening again after speech has completed
-                    setTimeout(() => recognition.start(), 500);
-                } catch (e) {
-                    console.error("Failed to re-start recognition:", e);
-                }
-            };
-            
-            utterance.onerror = (event) => {
-                console.error('Speech synthesis error:', event.error);
-                statusMessage.textContent = `Error: ${event.error}`;
-                isSpeaking = false;
-                micButton.classList.remove('speaking');
-                micButton.classList.add('initial');
-                statusMessage.textContent = "Listening for 'Jarvis'...";
+                updateUI('listening', "Listening...");
+                setTimeout(safeStartRecognition, 500);
             };
 
-            synthesis.speak(utterance);
+            window.speechSynthesis.speak(utterance);
         }
-        
-        // The click handler is a fallback on/off toggle for the continuous listener.
+
+        function addMessage(sender, text) {
+            const msg = document.createElement('div');
+            msg.className = `p-3 rounded-lg text-sm max-w-[85%] ${sender === 'user' ? 'bg-sky-600 ml-auto' : 'bg-slate-800 mr-auto border border-slate-700'}`;
+            msg.textContent = text;
+            conversationContainer.appendChild(msg);
+            conversationContainer.scrollTop = conversationContainer.scrollHeight;
+        }
+
+        function updateUI(state, message) {
+            statusMessage.textContent = message;
+            micButton.className = 'mic-btn';
+            micWrapper.classList.remove('active');
+
+            if (state === 'listening') {
+                micButton.classList.add('listening');
+                micWrapper.classList.add('active');
+            } else if (state === 'speaking') {
+                micButton.classList.add('speaking');
+            }
+        }
+
         micButton.addEventListener('click', () => {
-            if (isListening) {
-                recognition.stop();
-                statusMessage.textContent = "Offline";
-                isListening = false;
+            if (!isActivated) {
+                isActivated = true;
+                handleResponse("Jarvas online. How can I help?");
             } else {
-                recognition.start();
+                if (isRecognitionActive) {
+                    recognition.stop();
+                } else {
+                    safeStartRecognition();
+                }
             }
         });
 
         window.onload = () => {
-             // Start listening automatically on page load
-             recognition.start();
+            safeStartRecognition();
+            window.speechSynthesis.getVoices();
         };
     </script>
 </body>
